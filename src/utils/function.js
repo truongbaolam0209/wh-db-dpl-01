@@ -1,6 +1,16 @@
+import Axios from 'axios';
 import _ from 'lodash';
 import moment from 'moment';
 
+
+
+
+export const api = Axios.create({
+    baseURL: '/api',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
 
 
 // convert data from DB of all projects
@@ -59,11 +69,9 @@ export const getDataConverted = (projectArray) => {
 
 
 
-export const getAllDrawingSameValueInOneColumn = ({
-    columnsIndexArray,
-    allDrawings,
-    allDrawingsLatestRevision
-}, column, dataType) => {
+export const getAllDrawingSameValueInOneColumn = (data, column, dataType) => {
+
+    const { columnsIndexArray, allDrawings, allDrawingsLatestRevision } = data;
 
     const drawings = dataType === 'all' ? allDrawings : allDrawingsLatestRevision;
     const indexCategory = columnsIndexArray[column];
@@ -111,13 +119,21 @@ export const getDrawingLateNow = (data, type) => {
 
 
 
-export const mergeUndefined = ({ drawingCount, drawingList }, mergeWith) => {
+export const mergeUndefined = ({ drawingCount, drawingList }, mergeWith, columnsIndexArray, columnHeader) => {
     if (drawingCount['undefined'] === undefined) return;
 
     drawingCount[mergeWith] = (drawingCount[mergeWith] || 0) + drawingCount['undefined'];
     delete drawingCount['undefined'];
 
     drawingList[mergeWith] = [...drawingList[mergeWith] || [], ...drawingList['undefined']];
+
+    // drawingList[mergeWith].forEach(dwg => {
+    //     if (columnsIndexArray) { // dont know why columnsIndexArray sometimes undefined
+    //         if (dwg[columnsIndexArray[columnHeader]].value === undefined) {
+    //             dwg[columnsIndexArray[columnHeader]].value = mergeWith;
+    //         };
+    //     };
+    // });
     delete drawingList['undefined'];
 
     return {
@@ -127,51 +143,97 @@ export const mergeUndefined = ({ drawingCount, drawingList }, mergeWith) => {
 };
 
 
+export const formatString = (str) => {
+    let mystring = str.replace(/ /g, '').replace(/\(|\)/g, '');
+    return mystring.charAt(0).toLowerCase() + mystring.slice(1);
+};
+
 
 export const pickDataToTable = (drawings, columnsIndexArray) => {
-
-    let dwgArray = [];
+    let arr = [];
     drawings.forEach(dwg => {
-        const drawingNumber = dwg[columnsIndexArray['Drawing Number']].value || 'N/A';
-        const drawingName = dwg[columnsIndexArray['Drawing Name']].value || 'N/A';
-        const rfaRef = dwg[columnsIndexArray['RFA Ref']].value || 'N/A';
-        const drgType = dwg[columnsIndexArray['Drg Type']].value || 'N/A';
-        const useFor = dwg[columnsIndexArray['Use For']].value || 'N/A';
-        const coordinatorInCharge = dwg[columnsIndexArray['Coordinator In Charge']].value || 'N/A';
-        const modeller = dwg[columnsIndexArray['Modeller']].value || 'N/A';
-        const drgToConsultantT = dwg[columnsIndexArray['Drg to Consultant (T)']].value || 'N/A';
-        const drgToConsultantA = dwg[columnsIndexArray['Drg to Consultant (A)']].value || 'N/A';
-        const getApprovalT = dwg[columnsIndexArray['get Approval (T)']].value || 'N/A';
-        const getApprovalA = dwg[columnsIndexArray['get Approval (A)']].value || 'N/A';
-        const rev = dwg[columnsIndexArray['Rev']].value || 'N/A';
-        const status = dwg[columnsIndexArray['Status']].value || 'N/A';
+        let obj = {};
+        Object.keys(columnsIndexArray).forEach(header => {
+            obj[formatString(header)] = dwg[columnsIndexArray[header]].value || 'N/A';
+        });
+        arr.push(obj);
+    });
+    return arr;
+};
 
-        dwgArray.push({
-            drawingNumber,
-            drawingName,
-            rfaRef,
-            drgType,
-            useFor,
-            coordinatorInCharge,
-            modeller,
-            drgToConsultantT,
-            drgToConsultantA,
-            getApprovalT,
-            getApprovalA,
-            rev,
-            status
+
+
+export const convertDataToStackedChart = (data) => {
+    let dataChart = [];
+    let allKeys = [];
+    data && Object.keys(data).forEach(project => {
+        const { drawingCount } = mergeUndefined(getAllDrawingSameValueInOneColumn(data[project], 'Status'), 'Not Started');
+        dataChart.push({ ...drawingCount, name: project });
+        allKeys = [...allKeys, ...Object.keys(drawingCount)];
+    });
+    const itemArr = [...new Set(allKeys)];
+
+    itemArr.forEach(key => {
+        dataChart.forEach(projectData => {
+            if (key in projectData) return;
+            projectData[key] = 0;
         });
     });
 
-    return dwgArray;
+    return {
+        dataChart,
+        itemArr
+    };
 };
 
 
 
 
+export const sortStatusOrder = (statusArr) => {
+    const inputStackData = [
+        'Not Started',
+        '1st cut of model in-progress',
+        '1st cut of drawing in-progress',
+        'Pending design',
+        'Consultant reviewing',
+        'Reject and resubmit',
+        'Approved with comments, to Resubmit',
+        'Revise In-Progress',
+        'Approved with Comment, no submission Required',
+        'Approved for Construction',
+    ];
+    let arr = [];
+    inputStackData.forEach(element => {
+        statusArr.forEach(e => {
+            if (element === e) arr.push(element);
+        });
+    });
+    if (arr.length === 0) return statusArr;
+    return arr;
+};
 
+export const randomInteger = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
+export const createDummyRecords = () => {
+    let dummyRecords = [];
 
+    for (let i = 0; i < 100; i++) {
 
-
-
+        dummyRecords.push({
+            date: moment(new Date(2020, 6, 21)).add(i, 'day')._d,
+            projects: [
+                {
+                    projectName: 'Handy',
+                    drawingLateApproval: randomInteger(30, 60)
+                },
+                {
+                    projectName: 'Sumang',
+                    drawingLateApproval: randomInteger(30, 60)
+                },
+            ]
+        });
+    };
+    return dummyRecords;
+};

@@ -1,6 +1,4 @@
 
-
-
 export const colorType = {
     yellow: '#fff200',
     dark: '#1e272e',
@@ -85,6 +83,25 @@ export const dataScheme = {
 export const chartWidth = window.innerWidth >= sizeType.xl ? (window.innerWidth - 160) / 4 :
     window.innerWidth >= sizeType.md ? (window.innerWidth - 80) / 2 :
         window.innerWidth - 100;
+
+
+
+
+
+export const inputStackData = [
+    'Not Started',
+    '1st cut of model in-progress',
+    '1st cut of drawing in-progress',
+    'Pending design',
+    'Consultant reviewing',
+    'Reject and resubmit',
+    'Approved with comments, to Resubmit',
+    'Revise In-Progress',
+    'Approved with Comment, no submission Required',
+    'Approved for Construction',
+];
+
+
 
 
 

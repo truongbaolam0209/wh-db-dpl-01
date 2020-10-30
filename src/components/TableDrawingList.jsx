@@ -2,8 +2,7 @@ import { Icon } from 'antd';
 import React, { useMemo } from 'react';
 import { useExpanded, useGroupBy, useTable } from 'react-table';
 import styled from 'styled-components';
-import { pickDataToTable } from '../utils/function';
-
+import { formatString, pickDataToTable } from '../utils/function';
 
 
 const Table = ({ columns, data }) => {
@@ -24,6 +23,7 @@ const Table = ({ columns, data }) => {
         // useBlockLayout
     );
 
+    // console.log(groupBy, expanded);
 
     return (
         <>
@@ -31,16 +31,19 @@ const Table = ({ columns, data }) => {
                 <thead>
                     {headerGroups.map(headerGroup => (
                         <tr {...headerGroup.getHeaderGroupProps()}>
-                            {headerGroup.headers.map(column =>
-                                <th {...column.getHeaderProps()} >
-                                    {column.canGroupBy ? (
-                                        <span {...column.getGroupByToggleProps()}>
-                                            {column.isGrouped ? <IconTable type='stop' /> : <IconTable type='plus-circle' />}
-                                        </span>
-                                    ) : null}
-                                    {column.render('Header')}
-                                </th>
-                            )}
+                            {headerGroup.headers.map(column => {
+                                // console.log('COLUMN .....', column);
+                                return (
+                                    <th {...column.getHeaderProps()} >
+                                        {column.canGroupBy ? (
+                                            <span {...column.getGroupByToggleProps()}>
+                                                {column.isGrouped ? <IconTable type='stop' color='red' /> : <IconTable type='plus-circle' color='green' />}
+                                            </span>
+                                        ) : null}
+                                        {column.render('Header')}
+                                    </th>
+                                )
+                            })}
                         </tr>
                     ))}
                 </thead>
@@ -51,7 +54,7 @@ const Table = ({ columns, data }) => {
                         return (
                             <tr {...row.getRowProps()}>
                                 {row.cells.map(cell => {
-                                    console.log(row);
+                                    // console.log('ROW .....', row);
                                     return (
                                         <td {...cell.getCellProps()}
                                             style={{
@@ -67,7 +70,7 @@ const Table = ({ columns, data }) => {
                                             {cell.isGrouped ? (
                                                 <>
                                                     <span {...row.getExpandedToggleProps()}>
-                                                        {row.isExpanded ? <IconTable type='up-circle' /> : <IconTable type='down-circle' />}
+                                                        {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
                                                     </span>{' '}
                                                     {cell.render('Cell')} ({row.subRows.length})
                                                 </>
@@ -88,81 +91,48 @@ const Table = ({ columns, data }) => {
     );
 };
 
-const IconTable = ({ type }) => {
 
+const IconTable = ({ type, color }) => {
     return (
-        <Icon style={{ fontSize: 16, marginRight: 5, color: 'red' }} type={type} />
+        <Icon style={{ fontSize: 16, marginRight: 5, color: color }} type={type} />
     );
+};
+
+
+const getHeaderSorted = (columnsData, columnsHeader) => {
+    let arr = [];
+    columnsHeader.forEach(header => {
+        columnsData.forEach(headerData => {
+            if (header === headerData.Header) arr.push(headerData);
+        });
+    });
+    return arr;
+};
+
+const getColumnsHeader = (columnsIndexArray) => {
+    let columnsName = [];
+    for (const key in columnsIndexArray) {
+        columnsName.push({
+            Header: key,
+            accessor: formatString(key),
+        });
+    };
+    return columnsName;
 };
 
 const TableDrawingList = ({ data }) => {
 
+    const { drawings, columnsIndexArray, columnsHeader } = data;
+
+    const columnsName = getColumnsHeader(columnsIndexArray);
+
     const columns = useMemo(() => [
         {
-            Header: 'Name',
-            columns: [
-                {
-                    Header: 'Drawing Number',
-                    accessor: 'drawingNumber',
-                },
-                {
-                    Header: 'Drawing Name',
-                    accessor: 'drawingName',
-                },
-            ],
+            Header: 'Column Data',
+            columns: columnsHeader ? getHeaderSorted(columnsName, columnsHeader) : columnsName,
         },
-        {
-            Header: 'Info',
-            columns: [
-                {
-                    Header: 'RFA Ref',
-                    accessor: 'rfaRef',
-                },
-                {
-                    Header: 'Drg Type',
-                    accessor: 'drgType',
-                },
-                {
-                    Header: 'Use For',
-                    accessor: 'useFor',
-                },
-                {
-                    Header: 'Coordinator In Charge',
-                    accessor: 'coordinatorInCharge',
-                },
-                {
-                    Header: 'Modeller',
-                    accessor: 'modeller',
-                },
-                {
-                    Header: 'Drg To Consultant (T)',
-                    accessor: 'drgToConsultantT',
-                },
-                {
-                    Header: 'Drg To Consultant (A)',
-                    accessor: 'drgToConsultantA',
-                },
-                {
-                    Header: 'get Approval (T)',
-                    accessor: 'getApprovalT',
-                },
-                {
-                    Header: 'get Approval (A)',
-                    accessor: 'getApprovalA',
-                },
-                {
-                    Header: 'Rev',
-                    accessor: 'rev',
-                },
-                {
-                    Header: 'Status',
-                    accessor: 'status',
-                },
-            ],
-        },
-    ], []);
+    ], [columnsHeader, columnsName]);
 
-    const { drawings, columnsIndexArray } = data;
 
     return (
         <Container>
@@ -170,10 +140,8 @@ const TableDrawingList = ({ data }) => {
         </Container>
     );
 };
-
-
-
 export default TableDrawingList;
+
 
 
 const Container = styled.div`

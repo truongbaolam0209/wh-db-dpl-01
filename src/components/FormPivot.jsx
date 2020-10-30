@@ -2,20 +2,23 @@ import { Button, Divider, Modal, Select } from 'antd';
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
+import { createDummyRecords } from '../utils/function';
+import ChartBarRecord from './ChartBarRecord';
 import ButtonCapsule from './ui/ButtonCapsule';
 
 
 
-const FormPivot = ({ projectName, data, openDrawingTable }) => {
+const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
 
-    const { columnsIndexArray } = data;
+    const { columnsIndexArray, allDrawingsLatestRevision } = data;
 
 
-    const [pivotArray, setPivotArray] = useState([]);
+    const [columnsArray, setColumnsArray] = useState([]);
     const [titleLeft, setTitleLeft] = useState(Object.keys(columnsIndexArray));
     const [value, setValue] = useState('Select an option...');
     const [selected, setSelected] = useState(null);
     const [modalFormatVisible, setModalFormatVisible] = useState(false);
+    const [chartRecord, setChartRecord] = useState(false);
 
 
     const onChange = value => {
@@ -25,44 +28,44 @@ const FormPivot = ({ projectName, data, openDrawingTable }) => {
             setModalFormatVisible(true);
         } else {
             setTitleLeft(titleLeft.filter(title => title !== value));
-            setPivotArray([...pivotArray, value]);
+            setColumnsArray([...columnsArray, value]);
         };
     };
 
     const selectFormat = (e) => {
-        const formatType = e.target.textContent;
         setTitleLeft(titleLeft.filter(title => title !== selected));
-        setPivotArray([...pivotArray, selected + ' - ' + formatType]);
-        setModalFormatVisible(false);
-    };
-
-    const onCloseModalType = () => {
+        // setColumnsArray([...columnsArray, selected + ' - ' + formatType]);
+        setColumnsArray([...columnsArray, selected]);
         setModalFormatVisible(false);
     };
 
     const onResetHandle = () => {
-        setPivotArray([]);
+        setColumnsArray([]);
         setTitleLeft(Object.keys(columnsIndexArray));
     };
 
 
-    const sortedTableOpen = () => {
-        // openDrawingTable(projectName, 'Sorted Table', pivotArray);
-    };
-
-
-
-
     const onRemoveCategory = (e) => {
         const btnName = e.target.previousSibling.previousSibling.innerText;
-        setPivotArray(pivotArray.filter(x => x !== btnName));
+        setColumnsArray(columnsArray.filter(x => x !== btnName));
     };
 
-    console.log(pivotArray);
+
+
+    const sortedTableOpen = () => {
+        openDrawingTable(
+            projectName,
+            { type: 'Sorted table', category: 'category test' },
+            allDrawingsLatestRevision,
+            columnsIndexArray,
+            columnsArray
+        );
+    };
+
 
     return (
         <div style={{ marginTop: '10px', padding: '20px' }}>
-            {pivotArray.map(cl => (
+            {columnsArray.map(cl => (
                 <div key={cl} style={{ width: '100%', margin: '10px auto', padding: 5, border: `1px solid ${colorType.grey1}`, borderRadius: 3 }}>
                     <span style={{ marginRight: 15 }}>{cl}</span>
                     <Divider type='vertical' />
@@ -92,18 +95,37 @@ const FormPivot = ({ projectName, data, openDrawingTable }) => {
                     style={{ background: colorType.grey2, width: '90%', margin: '10px auto' }}
                     onClick={onResetHandle}
                 >Reset</Button>
+                <Button
+                    style={{ background: colorType.grey0, margin: '10px' }}
+                    onClick={() => setChartRecord(true)}
+                >Chart Report</Button>
             </div>
-
 
             <Modal
                 title='Select the format'
                 visible={modalFormatVisible}
-                onCancel={onCloseModalType}
+                onCancel={() => setModalFormatVisible(false)}
                 footer={null}
             >
                 <ButtonCapsule btnname='Week' onClick={selectFormat} />
                 <ButtonCapsule btnname='Month' onClick={selectFormat} />
                 <ButtonCapsule btnname='Year' onClick={selectFormat} />
+            </Modal>
+
+
+            <Modal
+                title={`Record ${projectName}`}
+                visible={chartRecord}
+                onCancel={() => setChartRecord(false)}
+                width={0.9 * window.innerWidth}
+                height={600}
+                footer={null}
+            >
+                <ChartBarRecord
+                    // data={JSON.parse(localStorage.getItem('wh-r'))}
+                    data={createDummyRecords()}
+                    projectName={projectName}
+                />
             </Modal>
 
         </div>
