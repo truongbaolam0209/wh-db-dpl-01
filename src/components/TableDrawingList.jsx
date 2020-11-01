@@ -1,6 +1,6 @@
 import { Icon } from 'antd';
 import React, { useMemo } from 'react';
-import { useFlexLayout, useResizeColumns, useRowSelect, useTable } from "react-table";
+import { useExpanded, useFlexLayout, useGroupBy, useResizeColumns, useRowSelect, useTable } from 'react-table';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
 import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
@@ -24,6 +24,14 @@ const getStyles = (props, align = 'left') => [props,
 ];
 
 
+const headerWithNoGroupFunction = (column) => {
+    const arr = [
+        'Drawing Number', 'Drawing Name'
+    ];
+    return arr.indexOf(column) !== -1;
+};
+
+
 const Table = ({ columns, data }) => {
 
     const defaultColumn = useMemo(() => ({
@@ -32,12 +40,14 @@ const Table = ({ columns, data }) => {
         // maxWidth: 200, // maxWidth is only used as a limit for resizing
     }), []);
 
-    const ccc = useTable(
+    const reactTable = useTable(
         {
             columns,
             data,
-            defaultColumn,
+            // defaultColumn,
         },
+        useGroupBy,
+        useExpanded,
         useResizeColumns,
         useFlexLayout,
         useRowSelect,
@@ -47,7 +57,7 @@ const Table = ({ columns, data }) => {
                 const selectionGroupHeader = headerGroups[0].headers[0];
                 selectionGroupHeader.canResize = true;
             })
-        }
+        },
     );
 
     const {
@@ -56,33 +66,39 @@ const Table = ({ columns, data }) => {
         rows,
         prepareRow,
         totalColumnsWidth
-    } = ccc;
+    } = reactTable;
 
-    console.log(ccc);
 
     return (
         <Container totalWidth={totalColumnsWidth}>
             <div {...getTableProps()} className='table'>
-
                 <div className='thead'>
                     {headerGroups.map(headerGroup => (
-                        <div className='tr'
-                            {...headerGroup.getHeaderGroupProps({
-                                style: { paddingRight: '15px' }
+                        <div className='tr' {...headerGroup.getHeaderGroupProps()}>
+                            {headerGroup.headers.map(column => {
+                                console.log(headerWithNoGroupFunction(column.Header));
+                                return (
+                                    <div {...column.getHeaderProps(headerProps)} className='th'>
+
+                                        {column.render('Header')}
+                                        {column.canResize && (
+                                            <div
+                                                {...column.getResizerProps()}
+                                                className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
+                                            />
+                                        )}
+                                        {column.canGroupBy ? (
+                                            <span {...column.getGroupByToggleProps()}>
+                                                {headerWithNoGroupFunction(column.Header) ? null
+                                                    : column.isGrouped ? <IconTable type='stop' color='red' />
+                                                        : <IconTable type='plus-circle' color='green' />
+                                                }
+                                            </span>
+                                        ) : null}
+
+                                    </div>
+                                )
                             })}
-                        >
-                            {headerGroup.headers.map(column => (
-                                <div {...column.getHeaderProps(headerProps)} className='th'>
-                                    {column.render('Header')}
-                                    {/* Use column.getResizerProps to hook up the events correctly */}
-                                    {column.canResize && (
-                                        <div
-                                            {...column.getResizerProps()}
-                                            className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
-                                        />
-                                    )}
-                                </div>
-                            ))}
                         </div>
                     ))}
                 </div>
@@ -95,9 +111,18 @@ const Table = ({ columns, data }) => {
                                 {row.cells.map(cell => {
                                     return (
                                         <div {...cell.getCellProps(cellProps)} className='td'>
-                                            {cell.render('Cell')}
+                                            {cell.isGrouped ? (
+                                                <>
+                                                    <span {...row.getExpandedToggleProps()}>
+                                                        {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
+                                                    </span>{' '}
+                                                    {cell.render('Cell')} ({row.subRows.length})
+                                                </>
+                                            ) : cell.isAggregated ? cell.render('Aggregated')
+                                                    : cell.isPlaceholder ? null
+                                                        : (cell.render('Cell'))}
                                         </div>
-                                    )
+                                    );
                                 })}
                             </div>
                         );
@@ -126,7 +151,7 @@ const Container = styled.div`
         .thead {
             position: absolute;
             z-index: 1000;
-            background-color: ${colorType.grey1};
+            background-color: ${colorType.grey3};
             top: 0;
         }
 
@@ -146,11 +171,12 @@ const Container = styled.div`
         }
         
         .th, .td {
+            color: black;
             margin: 0;
             padding: 0.15rem;
             padding-left: 0.25rem;
-            border-right: 1px solid black;
-            border-bottom: 1px solid black;
+            border-right: 1px solid ${colorType.grey2};
+            border-bottom: 1px solid ${colorType.grey2};
             /* In this example we use an absolutely position resizer, so this is required. */
             position: relative;
 
@@ -165,7 +191,7 @@ const Container = styled.div`
             .resizer {
                 right: 0;
                 background: ${colorType.grey2};
-                width: 2px;
+                width: 0.5px;
                 height: 100%;
                 position: absolute;
                 top: 0;

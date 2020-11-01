@@ -5,6 +5,7 @@ export const colorType = {
     grey0: '#ecf0f1',
     grey1: '#bdc3c7',
     grey2: '#636e72',
+    grey3: '#dfe4ea',
     red: '#b33939',
     green: '#05c46b',
     blue: '#0984e3',

@@ -124,7 +124,7 @@ export const mergeUndefined = ({ drawingCount, drawingList }, mergeWith, columns
 
     drawingCount[mergeWith] = (drawingCount[mergeWith] || 0) + drawingCount['undefined'];
     delete drawingCount['undefined'];
-    
+
     drawingList[mergeWith] = [...drawingList[mergeWith] || [], ...drawingList['undefined']];
     delete drawingList['undefined'];
 
@@ -234,7 +234,6 @@ export const createDummyRecords = () => {
 
 
 const getColumnWidth = (rows, accessor, headerText) => {
-    console.log(rows);
     const maxWidth = 400;
     const magicSpacing = 10;
     const cellLength = Math.max(
@@ -249,11 +248,19 @@ const getColumnWidth = (rows, accessor, headerText) => {
 export const getColumnsHeader = (columnsIndexArray, data) => {
     let columnsName = [];
     for (const key in columnsIndexArray) {
-        columnsName.push({
-            Header: key,
-            accessor: formatString(key),
-            width: getColumnWidth(data, formatString(key), key),
-        });
+        if (
+            key !== 'Delta_Date' &&
+            key !== 'Delta_IT_CT' &&
+            key !== 'Delta_Issue' &&
+            key !== 'Delta_KTP'
+        ) {
+            columnsName.push({
+                Header: key,
+                accessor: formatString(key),
+                width: getColumnWidth(data, formatString(key), key),
+            });
+        };
+
     };
     return columnsName;
 };
