@@ -1,9 +1,10 @@
 import { Icon } from 'antd';
 import React, { useMemo } from 'react';
-import { useFlexLayout, useResizeColumns, useRowSelect, useTable } from 'react-table';
+import { useFlexLayout, useResizeColumns, useRowSelect, useTable } from "react-table";
 import styled from 'styled-components';
 import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
 import scrollbarWidth from './tableDrawingList/scrollbarWidth';
+
 
 
 
@@ -26,7 +27,7 @@ const Table = ({ columns, data }) => {
 
     const defaultColumn = useMemo(() => ({
         // minWidth: 30, // minWidth is only used as a limit for resizing
-        width: 100, // width is used for both the flex-basis and flex-grow
+        width: 150, // width is used for both the flex-basis and flex-grow
         // maxWidth: 200, // maxWidth is only used as a limit for resizing
     }), []);
 
@@ -136,42 +137,29 @@ export default TableDrawingList;
 
 
 const Container = styled.div`
-    /* overflow: auto; */
-    white-space: nowrap;
-    height: ${0.6 * window.innerHeight}px;
-    /* vertical-align: middle; */
 
-    /* These styles are suggested for the table fill all available space in its containing element */
+    /* white-space: nowrap; */
+    height: ${0.6 * window.innerHeight}px;
+
     display: block;
-    /* These styles are required for a horizontaly scrollable table overflow */
     overflow: scroll;
-    /* overflow-y: hidden; */
-    /* overflow: scroll; */
-    border: 1px solid green;
+
+    border: 1px solid black;
 
     .table {
         border-spacing: 0;
-        /* border: 1px solid black; */
         position: relative;
 
         .thead {
-            /* These styles are required for a scrollable body to align with the header properly */
-            /* overflow-y: auto; */
-            /* overflow-x: hidden; */
-            /* position: absolute; */
-            
-            
-            position: absolute;
-            z-index: 1000;
-            background-color: green;
-            top: 0;
+            /* background-color: red; */
+        }
+
+        .thead .tr {
+            background-color: red;
         }
 
         .tbody {
-            /* These styles are required for a scrollable table body */
-            overflow-y: scroll;
-            overflow-x: hidden;
-
+            /* overflow: overlay; */
             height: ${0.6 * window.innerHeight - scrollbarWidth() - 40}px;
         }
 
@@ -188,8 +176,13 @@ const Container = styled.div`
             padding: 0.5rem;
             border-right: 1px solid black;
             border-bottom: 1px solid black;
-            /* In this example we use an absolutely position resizer, so this is required. */
+
+            
             position: relative;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
 
             :last-child {
                 border-right: 0;
