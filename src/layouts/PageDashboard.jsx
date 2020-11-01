@@ -34,7 +34,12 @@ const PageDashboard = () => {
             try {
                 // const result = await Axios.post(
                 //     'https://bim.wohhup.com/api/smartsheet/get-sheets-dashboard',
-                //     { listSheetId: [8919906142971780, 4758181617395588] }
+                //     {
+                //         listSheetId: [
+                //             8919906142971780,
+                //             4758181617395588
+                //         ]
+                //     }
                 // );
                 // setData(getDataConverted(result.data));
                 // setLoading(false);
@@ -194,7 +199,7 @@ const PageDashboard = () => {
     //         const res = await api.get('/records');
     //         setDataRecord(res.data);
     //         localStorage.setItem('wh-r', JSON.stringify(res.data));
-            
+
     //         setDataRecord(JSON.parse(localStorage.getItem('wh-r')));
     //     } catch (err) {
     //         console.log(err);
@@ -257,7 +262,7 @@ const PageDashboard = () => {
                                             data={data[projectName]}
                                             openDrawingTable={openDrawingTable}
                                             projectName={projectName}
-                                            // dataRecord={dataRecord}
+                                        // dataRecord={dataRecord}
                                         />
                                     </ChartPanel>
 

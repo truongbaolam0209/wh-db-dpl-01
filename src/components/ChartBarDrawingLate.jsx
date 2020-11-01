@@ -9,9 +9,7 @@ import CardPanel from './ui/CardPanel';
 
 
 
-const ChartBarDrawingLate = ({ data, title }) => {
-
-
+const drawingLateInputChart = (data) => {
     let dataChart = [];
     data && Object.keys(data).forEach(project => {
         const drawingsLateApproval = getDrawingLateNow(data[project], 'getApproval');
@@ -20,22 +18,26 @@ const ChartBarDrawingLate = ({ data, title }) => {
             value: drawingsLateApproval.length
         });
     });
+    return dataChart;
+};
 
+
+const ChartBarDrawingLate = ({ data, title }) => {
 
     const dummyLateConstruction = [
-        { name: 'Sumang', value: 15 },
         { name: 'Handy', value: 6 },
+        { name: 'Sumang', value: 15 },
     ];
 
     const inputData = title === 'No Of Drawing Late Construction' ? dummyLateConstruction
-        : title === 'No Of Drawing Late Approval' ? dataChart : null;
+        : title === 'No Of Drawing Late Approval' ? drawingLateInputChart(data) : null;
 
     const LabelCustomStackedTotal = (props) => {
         const { x, y, value } = props;
         return (
             <>
                 <text
-                    style={{ fontSize: 17, fontWeight: 'bold' }}
+                    style={{ fontSize: 16, fontWeight: 'bold' }}
                     x={x + 10}
                     y={y - 10}
                     fill='black'
@@ -71,9 +73,7 @@ const ChartBarDrawingLate = ({ data, title }) => {
                     background={{ fill: '#eee', padding: '0 25px' }}
                     isAnimationActive={false}
                     label={<LabelCustomStackedTotal />}
-                >
-                    {/* <LabelList dataKey='value' position='top' /> */}
-                </Bar>
+                />
             </BarChart>
 
             <div style={{ paddingLeft: 50, height: window.innerWidth >= sizeType.xl && 180 }}>
@@ -94,7 +94,6 @@ const ChartBarDrawingLate = ({ data, title }) => {
 };
 
 export default ChartBarDrawingLate;
-
 
 
 const StyledBadge = styled(Badge)`

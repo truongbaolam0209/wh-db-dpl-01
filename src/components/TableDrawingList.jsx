@@ -2,6 +2,7 @@ import { Icon } from 'antd';
 import React, { useMemo } from 'react';
 import { useFlexLayout, useResizeColumns, useRowSelect, useTable } from "react-table";
 import styled from 'styled-components';
+import { colorType } from '../assets/constant';
 import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
 import scrollbarWidth from './tableDrawingList/scrollbarWidth';
 
@@ -31,12 +32,7 @@ const Table = ({ columns, data }) => {
         // maxWidth: 200, // maxWidth is only used as a limit for resizing
     }), []);
 
-    const { 
-        getTableProps, 
-        headerGroups, 
-        rows, 
-        prepareRow,
-    } = useTable(
+    const ccc = useTable(
         {
             columns,
             data,
@@ -54,56 +50,136 @@ const Table = ({ columns, data }) => {
         }
     );
 
+    const {
+        getTableProps,
+        headerGroups,
+        rows,
+        prepareRow,
+        totalColumnsWidth
+    } = ccc;
 
+    console.log(ccc);
 
     return (
-        <div {...getTableProps()} className='table'>
+        <Container totalWidth={totalColumnsWidth}>
+            <div {...getTableProps()} className='table'>
 
-            <div className='thead'>
-                {headerGroups.map(headerGroup => (
-                    <div className='tr'
-                        {...headerGroup.getHeaderGroupProps({
-                            style: { paddingRight: '15px' }
-                        })}
-                    >
-                        {headerGroup.headers.map(column => (
-                            <div {...column.getHeaderProps(headerProps)} className='th'>
-                                {column.render('Header')}
-                                {/* Use column.getResizerProps to hook up the events correctly */}
-                                {column.canResize && (
-                                    <div
-                                        {...column.getResizerProps()}
-                                        className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                ))}
-            </div>
-
-            <div className='tbody'>
-                {rows.map(row => {
-                    prepareRow(row);
-                    return (
-                        <div {...row.getRowProps()} className='tr'>
-                            {row.cells.map(cell => {
-                                return (
-                                    <div {...cell.getCellProps(cellProps)} className='td'>
-                                        {cell.render('Cell')}
-                                    </div>
-                                )
+                <div className='thead'>
+                    {headerGroups.map(headerGroup => (
+                        <div className='tr'
+                            {...headerGroup.getHeaderGroupProps({
+                                style: { paddingRight: '15px' }
                             })}
+                        >
+                            {headerGroup.headers.map(column => (
+                                <div {...column.getHeaderProps(headerProps)} className='th'>
+                                    {column.render('Header')}
+                                    {/* Use column.getResizerProps to hook up the events correctly */}
+                                    {column.canResize && (
+                                        <div
+                                            {...column.getResizerProps()}
+                                            className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
+                                        />
+                                    )}
+                                </div>
+                            ))}
                         </div>
-                    );
-                })}
+                    ))}
+                </div>
+
+                <div className='tbody'>
+                    {rows.map(row => {
+                        prepareRow(row);
+                        return (
+                            <div {...row.getRowProps()} className='tr'>
+                                {row.cells.map(cell => {
+                                    return (
+                                        <div {...cell.getCellProps(cellProps)} className='td'>
+                                            {cell.render('Cell')}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
-        </div>
+        </Container>
     );
 };
 
+const Container = styled.div`
 
-const TableComp = styled.table``;
+    white-space: nowrap;
+    height: ${0.6 * window.innerHeight}px;
+    display: block;
+    overflow: scroll;
+    overflow-y: hidden;
+    border: 1px solid black;
+
+
+    .table {
+
+        border-spacing: 0;
+        position: relative;
+
+        .thead {
+            position: absolute;
+            z-index: 1000;
+            background-color: ${colorType.grey1};
+            top: 0;
+        }
+
+        .tbody {
+            overflow-y: auto;
+            overflow-x: hidden;
+            height: ${0.6 * window.innerHeight - scrollbarWidth() - 40}px;
+            width: ${props => props.totalWidth}px;
+        }
+
+        .tr {
+            :last-child {
+                .td {
+                    border-bottom: 0;
+                }
+            }
+        }
+        
+        .th, .td {
+            margin: 0;
+            padding: 0.15rem;
+            padding-left: 0.25rem;
+            border-right: 1px solid black;
+            border-bottom: 1px solid black;
+            /* In this example we use an absolutely position resizer, so this is required. */
+            position: relative;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+            
+            :last-child {
+                border-right: 0;
+            }
+            .resizer {
+                right: 0;
+                background: ${colorType.grey2};
+                width: 2px;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                z-index: 1;
+                /* prevents from scrolling while dragging on touch devices */
+                touch-action :none;
+                &.isResizing {
+                    background: black;
+                }
+            }
+        }
+    }
+`;
+
 
 
 const IconTable = ({ type, color }) => {
@@ -118,91 +194,19 @@ const TableDrawingList = ({ data }) => {
 
     const { drawings, columnsIndexArray, columnsHeader } = data;
 
-    const columnsName = getColumnsHeader(columnsIndexArray);
+    const tableDataInput = pickDataToTable(drawings, columnsIndexArray);
+
+    const columnsName = getColumnsHeader(columnsIndexArray, tableDataInput);
 
     const columns = useMemo(() => {
         return columnsHeader ? getHeaderSorted(columnsName, columnsHeader) : columnsName
     }, [columnsHeader, columnsName]);
 
-    console.log(columns);
-
     return (
-        <Container>
-            <Table columns={columns} data={pickDataToTable(drawings, columnsIndexArray)} />
-        </Container>
+        <Table columns={columns} data={tableDataInput} />
     );
 };
 export default TableDrawingList;
 
 
 
-const Container = styled.div`
-
-    /* white-space: nowrap; */
-    height: ${0.6 * window.innerHeight}px;
-
-    display: block;
-    overflow: scroll;
-
-    border: 1px solid black;
-
-    .table {
-        border-spacing: 0;
-        position: relative;
-
-        .thead {
-            /* background-color: red; */
-        }
-
-        .thead .tr {
-            background-color: red;
-        }
-
-        .tbody {
-            /* overflow: overlay; */
-            height: ${0.6 * window.innerHeight - scrollbarWidth() - 40}px;
-        }
-
-        .tr {
-            :last-child {
-                .td {
-                    border-bottom: 0;
-                }
-            }
-        }
-
-        .th, .td {
-            margin: 0;
-            padding: 0.5rem;
-            border-right: 1px solid black;
-            border-bottom: 1px solid black;
-
-            
-            position: relative;
-
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-
-            :last-child {
-                border-right: 0;
-            }
-
-            .resizer {
-                right: 0;
-                background: blue;
-                width: 2px;
-                height: 100%;
-                position: absolute;
-                top: 0;
-                z-index: 1;
-                /* prevents from scrolling while dragging on touch devices */
-                touch-action :none;
-
-                &.isResizing {
-                    background: red;
-                }
-            }
-        }
-    }
-`;

@@ -13,7 +13,7 @@ export const api = Axios.create({
 });
 
 
-// convert data from DB of all projects
+
 export const getDataConverted = (projectArray) => {
 
     let dataOutput = {};
@@ -124,16 +124,8 @@ export const mergeUndefined = ({ drawingCount, drawingList }, mergeWith, columns
 
     drawingCount[mergeWith] = (drawingCount[mergeWith] || 0) + drawingCount['undefined'];
     delete drawingCount['undefined'];
-
+    
     drawingList[mergeWith] = [...drawingList[mergeWith] || [], ...drawingList['undefined']];
-
-    // drawingList[mergeWith].forEach(dwg => {
-    //     if (columnsIndexArray) { // dont know why columnsIndexArray sometimes undefined
-    //         if (dwg[columnsIndexArray[columnHeader]].value === undefined) {
-    //             dwg[columnsIndexArray[columnHeader]].value = mergeWith;
-    //         };
-    //     };
-    // });
     delete drawingList['undefined'];
 
     return {
@@ -162,7 +154,6 @@ export const pickDataToTable = (drawings, columnsIndexArray) => {
 };
 
 
-
 export const convertDataToStackedChart = (data) => {
     let dataChart = [];
     let allKeys = [];
@@ -188,8 +179,8 @@ export const convertDataToStackedChart = (data) => {
 
 
 
-
-export const sortStatusOrder = (statusArr) => {
+export const sortStatusOrder = (data) => {
+    const statusArr = [...data];
     const inputStackData = [
         'Not Started',
         '1st cut of model in-progress',
@@ -212,9 +203,12 @@ export const sortStatusOrder = (statusArr) => {
     return arr;
 };
 
+
+
 export const randomInteger = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
+
 
 export const createDummyRecords = () => {
     let dummyRecords = [];
@@ -239,19 +233,31 @@ export const createDummyRecords = () => {
 };
 
 
+const getColumnWidth = (rows, accessor, headerText) => {
+    console.log(rows);
+    const maxWidth = 400;
+    const magicSpacing = 10;
+    const cellLength = Math.max(
+        ...rows.map(row => (`${row[accessor]}` || '').length),
+        headerText.length,
+    );
+    return Math.min(maxWidth, cellLength * magicSpacing);
+};
 
 
 
-export const getColumnsHeader = (columnsIndexArray) => {
+export const getColumnsHeader = (columnsIndexArray, data) => {
     let columnsName = [];
     for (const key in columnsIndexArray) {
         columnsName.push({
             Header: key,
             accessor: formatString(key),
+            width: getColumnWidth(data, formatString(key), key),
         });
     };
     return columnsName;
 };
+
 
 
 export const getHeaderSorted = (columnsData, columnsHeader) => {

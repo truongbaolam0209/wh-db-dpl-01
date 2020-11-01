@@ -3,7 +3,7 @@ import _ from 'lodash';
 import React from 'react';
 import { Cell, Pie, PieChart, Tooltip } from 'recharts';
 import styled from 'styled-components';
-import { inputStackData, pieChartColors2 } from '../assets/constant';
+import { pieChartColors2 } from '../assets/constant';
 import { getAllDrawingSameValueInOneColumn, mergeUndefined, sortStatusOrder } from '../utils/function';
 
 
@@ -75,7 +75,6 @@ const ChartPieDrawing = ({ data, openDrawingTable, projectName }) => {
             <div style={{ margin: '0 auto', display: 'table' }}>
                 {sortStatusOrder(Object.keys(drawingCount)).reverse().map(item => (
                     <div key={item} style={{ display: 'flex' }}>
-                        <div style={{ paddingRight: 5 }}>{'(' + (inputStackData.indexOf(item) + 1) + ')'}</div>
                         <StyledBadge
                             size='small'
                             color={pieChartColors2[item]}

@@ -30,6 +30,7 @@ const ChartProgress = ({ data, projectName, openDrawingTable }) => {
         }
     ];
 
+
     const progressBarClick = (name) => {
         let dwgs;
         let category;
@@ -64,17 +65,15 @@ const ChartProgress = ({ data, projectName, openDrawingTable }) => {
             <div style={{ width: '80%', margin: '25px auto' }}>
 
                 {dataInput.map(item => (
-                    // <Tooltip title={item.name} key={item.name}>
-                        <Container key={item.name} onClick={() => progressBarClick(item.name)}>
-                            <span>{item.name}</span>
-                            <Progress
-                                trailColor='#eee'
-                                strokeColor={colorType.red}
-                                percent={Math.round(item.value / allDrawingsLatestRevision.length * 100)}
-                                style={{ paddingBottom: 29 }}
-                            />
-                        </Container>
-                    // </Tooltip>
+                    <Container key={item.name} onClick={() => progressBarClick(item.name)}>
+                        <span>{item.name}</span>
+                        <Progress
+                            trailColor='#eee'
+                            strokeColor={colorType.red}
+                            percent={Math.round(item.value / allDrawingsLatestRevision.length * 100)}
+                            style={{ paddingBottom: 29 }}
+                        />
+                    </Container>
                 ))}
             </div>
 
