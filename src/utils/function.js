@@ -237,3 +237,29 @@ export const createDummyRecords = () => {
     };
     return dummyRecords;
 };
+
+
+
+
+
+export const getColumnsHeader = (columnsIndexArray) => {
+    let columnsName = [];
+    for (const key in columnsIndexArray) {
+        columnsName.push({
+            Header: key,
+            accessor: formatString(key),
+        });
+    };
+    return columnsName;
+};
+
+
+export const getHeaderSorted = (columnsData, columnsHeader) => {
+    let arr = [];
+    columnsHeader.forEach(header => {
+        columnsData.forEach(headerData => {
+            if (header === headerData.Header) arr.push(headerData);
+        });
+    });
+    return arr;
+};

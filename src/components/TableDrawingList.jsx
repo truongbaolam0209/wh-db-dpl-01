@@ -1,95 +1,108 @@
 import { Icon } from 'antd';
 import React, { useMemo } from 'react';
-import { useExpanded, useGroupBy, useTable } from 'react-table';
+import { useFlexLayout, useResizeColumns, useRowSelect, useTable } from 'react-table';
 import styled from 'styled-components';
-import { formatString, pickDataToTable } from '../utils/function';
+import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
+import scrollbarWidth from './tableDrawingList/scrollbarWidth';
+
+
+
+const headerProps = (props, { column }) => getStyles(props, column.align);
+
+const cellProps = (props, { cell }) => getStyles(props, cell.column.align);
+
+const getStyles = (props, align = 'left') => [props,
+    {
+        style: {
+            justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
+            alignItems: 'flex-start',
+            display: 'flex',
+        },
+    },
+];
 
 
 const Table = ({ columns, data }) => {
-    const {
-        getTableProps,
-        getTableBodyProps,
-        headerGroups,
-        rows,
+
+    const defaultColumn = useMemo(() => ({
+        // minWidth: 30, // minWidth is only used as a limit for resizing
+        width: 100, // width is used for both the flex-basis and flex-grow
+        // maxWidth: 200, // maxWidth is only used as a limit for resizing
+    }), []);
+
+    const { 
+        getTableProps, 
+        headerGroups, 
+        rows, 
         prepareRow,
-        // state: { groupBy, expanded }
     } = useTable(
         {
             columns,
-            data
+            data,
+            defaultColumn,
         },
-        useGroupBy,
-        useExpanded,
-        // useBlockLayout
+        useResizeColumns,
+        useFlexLayout,
+        useRowSelect,
+        hooks => {
+            hooks.useInstanceBeforeDimensions.push(({ headerGroups }) => {
+                // fix the parent group of the selection button to not be resizable
+                const selectionGroupHeader = headerGroups[0].headers[0];
+                selectionGroupHeader.canResize = true;
+            })
+        }
     );
 
-    // console.log(groupBy, expanded);
+
 
     return (
-        <>
-            <table {...getTableProps()}>
-                <thead>
-                    {headerGroups.map(headerGroup => (
-                        <tr {...headerGroup.getHeaderGroupProps()}>
-                            {headerGroup.headers.map(column => {
-                                // console.log('COLUMN .....', column);
+        <div {...getTableProps()} className='table'>
+
+            <div className='thead'>
+                {headerGroups.map(headerGroup => (
+                    <div className='tr'
+                        {...headerGroup.getHeaderGroupProps({
+                            style: { paddingRight: '15px' }
+                        })}
+                    >
+                        {headerGroup.headers.map(column => (
+                            <div {...column.getHeaderProps(headerProps)} className='th'>
+                                {column.render('Header')}
+                                {/* Use column.getResizerProps to hook up the events correctly */}
+                                {column.canResize && (
+                                    <div
+                                        {...column.getResizerProps()}
+                                        className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+
+            <div className='tbody'>
+                {rows.map(row => {
+                    prepareRow(row);
+                    return (
+                        <div {...row.getRowProps()} className='tr'>
+                            {row.cells.map(cell => {
                                 return (
-                                    <th {...column.getHeaderProps()} >
-                                        {column.canGroupBy ? (
-                                            <span {...column.getGroupByToggleProps()}>
-                                                {column.isGrouped ? <IconTable type='stop' color='red' /> : <IconTable type='plus-circle' color='green' />}
-                                            </span>
-                                        ) : null}
-                                        {column.render('Header')}
-                                    </th>
+                                    <div {...cell.getCellProps(cellProps)} className='td'>
+                                        {cell.render('Cell')}
+                                    </div>
                                 )
                             })}
-                        </tr>
-                    ))}
-                </thead>
-
-                <tbody {...getTableBodyProps()} style={{ height: 500, overflowY: 'scroll' }}>
-                    {rows.map((row, i) => {
-                        prepareRow(row);
-                        return (
-                            <tr {...row.getRowProps()}>
-                                {row.cells.map(cell => {
-                                    // console.log('ROW .....', row);
-                                    return (
-                                        <td {...cell.getCellProps()}
-                                            style={{
-                                                background: cell.isGrouped
-                                                    ? '#0aff0082'
-                                                    : cell.isAggregated
-                                                        ? '#ffa50078'
-                                                        : cell.isPlaceholder
-                                                            ? '#ff000042'
-                                                            : 'white',
-                                            }}
-                                        >
-                                            {cell.isGrouped ? (
-                                                <>
-                                                    <span {...row.getExpandedToggleProps()}>
-                                                        {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
-                                                    </span>{' '}
-                                                    {cell.render('Cell')} ({row.subRows.length})
-                                                </>
-                                            )
-                                                : cell.isAggregated ? cell.render('Aggregated')
-                                                    : cell.isPlaceholder ? null
-                                                        : (cell.render('Cell'))}
-                                        </td>
-                                    )
-                                })}
-                            </tr>
-                        )
-                    })}
-                </tbody>
-
-            </table>
-        </>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
     );
 };
+
+
+const TableComp = styled.table``;
 
 
 const IconTable = ({ type, color }) => {
@@ -99,26 +112,6 @@ const IconTable = ({ type, color }) => {
 };
 
 
-const getHeaderSorted = (columnsData, columnsHeader) => {
-    let arr = [];
-    columnsHeader.forEach(header => {
-        columnsData.forEach(headerData => {
-            if (header === headerData.Header) arr.push(headerData);
-        });
-    });
-    return arr;
-};
-
-const getColumnsHeader = (columnsIndexArray) => {
-    let columnsName = [];
-    for (const key in columnsIndexArray) {
-        columnsName.push({
-            Header: key,
-            accessor: formatString(key),
-        });
-    };
-    return columnsName;
-};
 
 const TableDrawingList = ({ data }) => {
 
@@ -126,13 +119,11 @@ const TableDrawingList = ({ data }) => {
 
     const columnsName = getColumnsHeader(columnsIndexArray);
 
-    const columns = useMemo(() => [
-        {
-            Header: 'Column Data',
-            columns: columnsHeader ? getHeaderSorted(columnsName, columnsHeader) : columnsName,
-        },
-    ], [columnsHeader, columnsName]);
+    const columns = useMemo(() => {
+        return columnsHeader ? getHeaderSorted(columnsName, columnsHeader) : columnsName
+    }, [columnsHeader, columnsName]);
 
+    console.log(columns);
 
     return (
         <Container>
@@ -145,35 +136,79 @@ export default TableDrawingList;
 
 
 const Container = styled.div`
-    padding: 1rem;
-    overflow: auto;
+    /* overflow: auto; */
     white-space: nowrap;
-    overflow-y: scroll;
     height: ${0.6 * window.innerHeight}px;
-    vertical-align: middle;
+    /* vertical-align: middle; */
 
-    table {
+    /* These styles are suggested for the table fill all available space in its containing element */
+    display: block;
+    /* These styles are required for a horizontaly scrollable table overflow */
+    overflow: scroll;
+    /* overflow-y: hidden; */
+    /* overflow: scroll; */
+    border: 1px solid green;
+
+    .table {
         border-spacing: 0;
-        border: 1px solid black;
+        /* border: 1px solid black; */
+        position: relative;
 
-        tr {
+        .thead {
+            /* These styles are required for a scrollable body to align with the header properly */
+            /* overflow-y: auto; */
+            /* overflow-x: hidden; */
+            /* position: absolute; */
+            
+            
+            position: absolute;
+            z-index: 1000;
+            background-color: green;
+            top: 0;
+        }
+
+        .tbody {
+            /* These styles are required for a scrollable table body */
+            overflow-y: scroll;
+            overflow-x: hidden;
+
+            height: ${0.6 * window.innerHeight - scrollbarWidth() - 40}px;
+        }
+
+        .tr {
             :last-child {
-                td {
+                .td {
                     border-bottom: 0;
                 }
             }
         }
 
-        th, td {
+        .th, .td {
             margin: 0;
-            padding: 0.2rem;
-            border-bottom: 1px solid black;
+            padding: 0.5rem;
             border-right: 1px solid black;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            border-bottom: 1px solid black;
+            /* In this example we use an absolutely position resizer, so this is required. */
+            position: relative;
+
             :last-child {
                 border-right: 0;
+            }
+
+            .resizer {
+                right: 0;
+                background: blue;
+                width: 2px;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                z-index: 1;
+                /* prevents from scrolling while dragging on touch devices */
+                touch-action :none;
+
+                &.isResizing {
+                    background: red;
+                }
             }
         }
     }
