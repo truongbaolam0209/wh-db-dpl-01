@@ -1,6 +1,7 @@
 import { Icon } from 'antd';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
+    useBlockLayout,
     useExpanded,
     useFilters,
     useFlexLayout,
@@ -11,6 +12,7 @@ import {
     useSortBy,
     useTable
 } from 'react-table';
+import { FixedSizeList } from 'react-window';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
 import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
@@ -82,7 +84,7 @@ export const SelectColumnFilter = ({
             value={filterValue}
             onChange={e => setFilter(e.target.value || undefined)}>
 
-            <option value="">All</option>
+            <option value=''>All</option>
             {options.map((option, i) => (
                 <option key={i} value={option}>
                     {option}
@@ -95,6 +97,8 @@ export const SelectColumnFilter = ({
 
 const Table = ({ columns, data }) => {
 
+    const listRef = React.useRef();
+
     const defaultColumn = useMemo(() => ({
         // minWidth: 30, // minWidth is only used as a limit for resizing
         // width: 150, // width is used for both the flex-basis and flex-grow
@@ -102,6 +106,7 @@ const Table = ({ columns, data }) => {
         Filter: DefaultColumnFilter,
     }), []);
 
+    const scrollBarSize = useMemo(() => scrollbarWidth(), []);
 
     const reactTable = useTable(
         {
@@ -117,6 +122,7 @@ const Table = ({ columns, data }) => {
         useResizeColumns,
         useFlexLayout,
         useRowSelect,
+        useBlockLayout,
         hooks => {
             hooks.useInstanceBeforeDimensions.push(({ headerGroups }) => {
                 // fix the parent group of the selection button to not be resizable
@@ -128,6 +134,7 @@ const Table = ({ columns, data }) => {
 
     const {
         getTableProps,
+        getTableBodyProps,
         headerGroups,
         rows,
         totalColumnsWidth,
@@ -139,14 +146,40 @@ const Table = ({ columns, data }) => {
     } = reactTable;
 
 
-
+    const RenderRow = useCallback(
+        ({ index, style }) => {
+            const row = rows[index];
+            prepareRow(row);
+            return (
+                <div {...row.getRowProps({ style })} className='tr'>
+                    {row.cells.map(cell => {
+                        return (
+                            <div {...cell.getCellProps(cellProps)} className='td'>
+                                {cell.isGrouped ? (
+                                    <>
+                                        <span {...row.getExpandedToggleProps()}>
+                                            {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
+                                        </span>{' '}
+                                        {cell.render('Cell')} ({row.subRows.length})
+                                    </>
+                                ) : cell.isAggregated ? cell.render('Aggregated')
+                                        : cell.isPlaceholder ? null
+                                            : (cell.render('Cell'))}
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        },
+        [prepareRow, rows]
+    );
 
 
     return (
         <>
             <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
 
-            <Container totalWidth={totalColumnsWidth}>
+            <Container>
                 <div {...getTableProps()} className='table'>
                     <div className='thead'>
                         {headerGroups.map(headerGroup => (
@@ -182,7 +215,7 @@ const Table = ({ columns, data }) => {
                                                         console.log('CHECK ...', e);
                                                         e.persist();
                                                         column.toggleSortBy(undefined, !disableMultiSort && isMultiSortEvent(e));
-                                                        // listRef.current.scrollToItem(0);
+                                                        listRef.current.scrollToItem(0);
                                                     } : undefined
                                                 }
                                             >
@@ -204,7 +237,19 @@ const Table = ({ columns, data }) => {
                         ))}
                     </div>
 
-                    <div className='tbody'>
+                    <div {...getTableBodyProps()} className='tbody'>
+                        <FixedSizeList
+                            ref={listRef}
+                            height={400}
+                            itemCount={rows.length}
+                            itemSize={35}
+                            width={totalColumnsWidth + scrollbarWidth()}
+                        >
+                            {RenderRow}
+                        </FixedSizeList>
+                    </div>
+
+                    {/* <div className='tbody'>
                         {rows.map(row => {
                             prepareRow(row);
                             console.log(row);
@@ -229,7 +274,7 @@ const Table = ({ columns, data }) => {
                                 </div>
                             );
                         })}
-                    </div>
+                    </div> */}
                 </div>
             </Container>
         </>
@@ -259,14 +304,14 @@ const Container = styled.div`
         }
 
         .tbody {
+            padding-top: 39px;
             overflow-y: auto;
             overflow-x: hidden;
             height: ${0.6 * window.innerHeight - scrollbarWidth() - 40}px;
-            width: ${props => props.totalWidth}px;
-
-            .tr:first-child {
-                padding-top: 33px; // shift down the first row of body
-            }
+            /* width: ${props => props.totalWidth}px; */
+            /* .tr:first-child {
+                padding-top: 100px; // shift down the first row of body
+            } */
         }
 
         .tr {
