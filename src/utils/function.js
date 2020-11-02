@@ -1,6 +1,7 @@
 import Axios from 'axios';
 import _ from 'lodash';
 import moment from 'moment';
+import { SelectColumnFilter } from '../components/TableDrawingList';
 
 
 
@@ -11,7 +12,6 @@ export const api = Axios.create({
         'Content-Type': 'application/json'
     }
 });
-
 
 
 export const getDataConverted = (projectArray) => {
@@ -252,19 +252,43 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
             accessor: (row, i) => i + 1
         },
     ];
+
+
+    const filterSelect = (key) => {
+        if (
+            key === 'Status' ||
+            key === 'Rev' ||
+            key === 'Modeller' ||
+            key === 'Remark' ||
+            key === 'RFA Ref'
+        ) {
+            return true;
+        };
+    };
     
     for (const key in columnsIndexArray) {
+
         if (
             key !== 'Delta_Date' &&
             key !== 'Delta_IT_CT' &&
             key !== 'Delta_Issue' &&
             key !== 'Delta_KTP'
         ) {
-            columnsName.push({
-                Header: key,
-                accessor: formatString(key),
-                width: getColumnWidth(data, formatString(key), key),
-            });
+            if (filterSelect(key)) {
+                columnsName.push({
+                    Header: key,
+                    accessor: formatString(key),
+                    Filter: SelectColumnFilter,
+                    width: getColumnWidth(data, formatString(key), key),
+                });
+            } else {
+                columnsName.push({
+                    Header: key,
+                    accessor: formatString(key),
+                    width: getColumnWidth(data, formatString(key), key),
+                });
+            };
+            
         };
 
     };

@@ -1,9 +1,20 @@
 import { Icon } from 'antd';
 import React, { useMemo } from 'react';
-import { useExpanded, useFlexLayout, useGroupBy, useResizeColumns, useRowSelect, useSortBy, useTable } from 'react-table';
+import {
+    useExpanded,
+    useFilters,
+    useFlexLayout,
+    useGlobalFilter,
+    useGroupBy,
+    useResizeColumns,
+    useRowSelect,
+    useSortBy,
+    useTable
+} from 'react-table';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
 import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
+import { GlobalFilter } from './tableDrawingList/GlobalFilter';
 import scrollbarWidth from './tableDrawingList/scrollbarWidth';
 
 
@@ -34,20 +45,72 @@ const headerWithNoGroupFunction = (column) => {
 };
 
 
+export const DefaultColumnFilter = ({
+    column: { filterValue, preFilteredRows, setFilter },
+}) => {
+    const count = preFilteredRows.length;
+
+    return (
+        <input
+            value={filterValue || ''}
+            onChange={e => {
+                setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
+            }}
+            placeholder={`Search ${count} records...`}
+        />
+    );
+};
+
+
+export const SelectColumnFilter = ({
+    column: { filterValue, setFilter, preFilteredRows, id },
+}) => {
+
+    const options = useMemo(() => {
+
+        const options = new Set();
+
+        preFilteredRows.forEach(row => {
+            options.add(row.values[id]);
+        });
+
+        return [...options.values()];
+    }, [id, preFilteredRows]);
+
+    return (
+        <select
+            value={filterValue}
+            onChange={e => setFilter(e.target.value || undefined)}>
+
+            <option value="">All</option>
+            {options.map((option, i) => (
+                <option key={i} value={option}>
+                    {option}
+                </option>
+            ))}
+        </select>
+    );
+};
+
+
 const Table = ({ columns, data }) => {
 
     const defaultColumn = useMemo(() => ({
         // minWidth: 30, // minWidth is only used as a limit for resizing
-        width: 150, // width is used for both the flex-basis and flex-grow
+        // width: 150, // width is used for both the flex-basis and flex-grow
         // maxWidth: 200, // maxWidth is only used as a limit for resizing
+        Filter: DefaultColumnFilter,
     }), []);
+
 
     const reactTable = useTable(
         {
             columns,
             data,
-            // defaultColumn,
+            defaultColumn,
         },
+        useFilters,
+        useGlobalFilter,
         useGroupBy,
         useExpanded,
         useSortBy,
@@ -71,95 +134,105 @@ const Table = ({ columns, data }) => {
         prepareRow,
         disableMultiSort,
         isMultiSortEvent = (e) => e.shiftKey,
+        state: { globalFilter },
+        setGlobalFilter
     } = reactTable;
 
 
+
+
+
     return (
-        <Container totalWidth={totalColumnsWidth}>
-            <div {...getTableProps()} className='table'>
-                <div className='thead'>
-                    {headerGroups.map(headerGroup => (
-                        <div className='tr' {...headerGroup.getHeaderGroupProps()}>
-                            {headerGroup.headers.map(column => {
-                                console.log(column.Header, column);
-                                return (
-                                    <div
-                                        className='th'
-                                        {...column.getHeaderProps(headerProps)}
+        <>
+            <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
 
-                                    >
-
-                                        {column.render('Header')}
-
-                                        {column.canResize && (
-                                            <div {...column.getResizerProps()}
-                                                className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
-                                            />
-                                        )}
-                                        {column.canGroupBy && (
-                                            <span {...column.getGroupByToggleProps()}>
-                                                {headerWithNoGroupFunction(column.Header) ? null
-                                                    : column.isGrouped ? <IconTable type='stop' color='red' />
-                                                        : <IconTable type='plus-circle' color='green' />
-                                                }
-                                            </span>
-                                        )}
-
-                                        {/* {column.canSort && ( */}
-                                        <span {...column.getSortByToggleProps()}
-                                            onClick={
-                                                column.canSort ? (e) => {
-                                                    console.log('CHECK ...', e);
-                                                    e.persist();
-                                                    column.toggleSortBy(undefined, !disableMultiSort && isMultiSortEvent(e));
-                                                    // listRef.current.scrollToItem(0);
-                                                } : undefined
-                                            }
-                                        >
-                                            {column.isSorted
-                                                ? (column.isSortedDesc
-                                                    ? ' 🔽'
-                                                    : ' 🔼')
-                                                : 'CLICK'}
-                                        </span>
-                                        {/* )} */}
-
-
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    ))}
-                </div>
-
-                <div className='tbody'>
-                    {rows.map(row => {
-                        prepareRow(row);
-                        console.log(row);
-                        return (
-                            <div {...row.getRowProps()} className='tr'>
-                                {row.cells.map(cell => {
+            <Container totalWidth={totalColumnsWidth}>
+                <div {...getTableProps()} className='table'>
+                    <div className='thead'>
+                        {headerGroups.map(headerGroup => (
+                            <div className='tr' {...headerGroup.getHeaderGroupProps()}>
+                                {headerGroup.headers.map(column => {
+                                    // console.log(column.Header, column);
                                     return (
-                                        <div {...cell.getCellProps(cellProps)} className='td'>
-                                            {cell.isGrouped ? (
-                                                <>
-                                                    <span {...row.getExpandedToggleProps()}>
-                                                        {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
-                                                    </span>{' '}
-                                                    {cell.render('Cell')} ({row.subRows.length})
-                                                </>
-                                            ) : cell.isAggregated ? cell.render('Aggregated')
-                                                    : cell.isPlaceholder ? null
-                                                        : (cell.render('Cell'))}
+                                        <div
+                                            className='th'
+                                            {...column.getHeaderProps(headerProps)}
+
+                                        >
+
+                                            {column.render('Header')}
+
+                                            {column.canResize && (
+                                                <div {...column.getResizerProps()}
+                                                    className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
+                                                />
+                                            )}
+                                            {column.canGroupBy && (
+                                                <span {...column.getGroupByToggleProps()}>
+                                                    {headerWithNoGroupFunction(column.Header) ? null
+                                                        : column.isGrouped ? <IconTable type='stop' color='red' />
+                                                            : <IconTable type='plus-circle' color='green' />
+                                                    }
+                                                </span>
+                                            )}
+
+                                            <span {...column.getSortByToggleProps()}
+                                                onClick={
+                                                    column.canSort ? (e) => {
+                                                        console.log('CHECK ...', e);
+                                                        e.persist();
+                                                        column.toggleSortBy(undefined, !disableMultiSort && isMultiSortEvent(e));
+                                                        // listRef.current.scrollToItem(0);
+                                                    } : undefined
+                                                }
+                                            >
+                                                {column.isSorted
+                                                    ? (column.isSortedDesc
+                                                        ? <IconTable type='sort-ascending' />
+                                                        : <IconTable type='sort-descending' />)
+                                                    : <IconTable type='ordered-list' />}
+                                            </span>
+
+                                            <span>{column.canFilter ? column.render('Filter') : null}</span>
+
+
+
                                         </div>
-                                    );
+                                    )
                                 })}
                             </div>
-                        );
-                    })}
+                        ))}
+                    </div>
+
+                    <div className='tbody'>
+                        {rows.map(row => {
+                            prepareRow(row);
+                            console.log(row);
+                            return (
+                                <div {...row.getRowProps()} className='tr'>
+                                    {row.cells.map(cell => {
+                                        return (
+                                            <div {...cell.getCellProps(cellProps)} className='td'>
+                                                {cell.isGrouped ? (
+                                                    <>
+                                                        <span {...row.getExpandedToggleProps()}>
+                                                            {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
+                                                        </span>{' '}
+                                                        {cell.render('Cell')} ({row.subRows.length})
+                                                    </>
+                                                ) : cell.isAggregated ? cell.render('Aggregated')
+                                                        : cell.isPlaceholder ? null
+                                                            : (cell.render('Cell'))}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
-        </Container>
+            </Container>
+        </>
     );
 };
 
