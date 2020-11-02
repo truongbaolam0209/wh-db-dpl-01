@@ -1,5 +1,5 @@
 import { Icon } from 'antd';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     useBlockLayout,
     useExpanded,
@@ -16,11 +16,20 @@ import { FixedSizeList } from 'react-window';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
 import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
-import { GlobalFilter } from './tableDrawingList/GlobalFilter';
-import scrollbarWidth from './tableDrawingList/scrollbarWidth';
 
 
 
+const scrollbarWidth = () => {
+    const scrollDiv = document.createElement('div');
+    scrollDiv.setAttribute(
+        'style',
+        'width: 100px; height: 100px; overflow: scroll; position: absolute; top: -9999px;'
+    );
+    document.body.appendChild(scrollDiv);
+    const scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+    document.body.removeChild(scrollDiv);
+    return scrollbarWidth;
+};
 
 const headerProps = (props, { column }) => {
     return getStyles(props, column.align);
@@ -64,14 +73,14 @@ export const DefaultColumnFilter = ({
 };
 
 
+
 export const SelectColumnFilter = ({
     column: { filterValue, setFilter, preFilteredRows, id },
 }) => {
 
     const options = useMemo(() => {
-
         const options = new Set();
-
+        
         preFilteredRows.forEach(row => {
             options.add(row.values[id]);
         });
@@ -91,6 +100,31 @@ export const SelectColumnFilter = ({
                 </option>
             ))}
         </select>
+    );
+};
+
+
+export const GlobalFilter = ({ filter, setFilter }) => {
+
+    const [value, setValue] = useState(filter);
+
+    const onChange = value => {
+        setTimeout(() => {
+            setFilter(value || undefined);
+        }, 1000);
+    };
+
+    return (
+        <span>
+            Search:{' '}
+            <input
+                value={value || ''}
+                onChange={e => {
+                    setValue(e.target.value);
+                    onChange(e.target.value);
+                }}
+            />
+        </span>
     );
 };
 
@@ -146,33 +180,32 @@ const Table = ({ columns, data }) => {
     } = reactTable;
 
 
-    const RenderRow = useCallback(
-        ({ index, style }) => {
-            const row = rows[index];
-            prepareRow(row);
-            return (
-                <div {...row.getRowProps({ style })} className='tr'>
-                    {row.cells.map(cell => {
-                        return (
-                            <div {...cell.getCellProps(cellProps)} className='td'>
-                                {cell.isGrouped ? (
-                                    <>
-                                        <span {...row.getExpandedToggleProps()}>
-                                            {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
-                                        </span>{' '}
-                                        {cell.render('Cell')} ({row.subRows.length})
-                                    </>
-                                ) : cell.isAggregated ? cell.render('Aggregated')
-                                        : cell.isPlaceholder ? null
-                                            : (cell.render('Cell'))}
-                            </div>
-                        );
-                    })}
-                </div>
-            );
-        },
-        [prepareRow, rows]
-    );
+    const RenderRow = useCallback(args => {
+
+        const { index, style } = args;
+        const row = rows[index];
+        prepareRow(row);
+        return (
+            <div {...row.getRowProps({ style })} className='tr'>
+                {row.cells.map(cell => {
+                    return (
+                        <div {...cell.getCellProps(cellProps)} className='td'>
+                            {cell.isGrouped ? (
+                                <>
+                                    <span {...row.getExpandedToggleProps()}>
+                                        {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
+                                    </span>{' '}
+                                    {cell.render('Cell')} ({row.subRows.length})
+                                </>
+                            ) : cell.isAggregated ? cell.render('Aggregated')
+                                    : cell.isPlaceholder ? null
+                                        : (cell.render('Cell'))}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }, [prepareRow, rows]);
 
 
     return (
@@ -249,32 +282,6 @@ const Table = ({ columns, data }) => {
                         </FixedSizeList>
                     </div>
 
-                    {/* <div className='tbody'>
-                        {rows.map(row => {
-                            prepareRow(row);
-                            console.log(row);
-                            return (
-                                <div {...row.getRowProps()} className='tr'>
-                                    {row.cells.map(cell => {
-                                        return (
-                                            <div {...cell.getCellProps(cellProps)} className='td'>
-                                                {cell.isGrouped ? (
-                                                    <>
-                                                        <span {...row.getExpandedToggleProps()}>
-                                                            {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
-                                                        </span>{' '}
-                                                        {cell.render('Cell')} ({row.subRows.length})
-                                                    </>
-                                                ) : cell.isAggregated ? cell.render('Aggregated')
-                                                        : cell.isPlaceholder ? null
-                                                            : (cell.render('Cell'))}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            );
-                        })}
-                    </div> */}
                 </div>
             </Container>
         </>
@@ -381,7 +388,7 @@ const TableDrawingList = ({ data }) => {
     const columnsName = getColumnsHeader(columnsIndexArray, tableDataInput);
 
     const columns = useMemo(() => {
-        return columnsHeader ? getHeaderSorted(columnsName, columnsHeader) : columnsName
+        return columnsHeader ? getHeaderSorted(columnsName, columnsHeader) : columnsName;
     }, [columnsHeader, columnsName]);
 
     return (

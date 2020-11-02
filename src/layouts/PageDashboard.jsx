@@ -1,4 +1,4 @@
-import { Col, Divider, Modal, Row, Skeleton } from 'antd';
+import { Button, Col, Divider, Modal, Row, Skeleton } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { colorType } from '../assets/constant';
 import ChartBarDrawing from '../components/ChartBarDrawing';
@@ -64,148 +64,18 @@ const PageDashboard = () => {
 
     const [drawingTableVisible, setDrawingTableVisible] = useState(false);
     const [drawingTableData, setDrawingTableData] = useState(null);
+    const [dataTableNow, setDataTableNow] = useState(null);
     const openDrawingTable = (projectName, title, drawings, columnsIndexArray, columnsHeader) => {
+        // setDataTableNow({ projectName, title, drawings, columnsIndexArray, columnsHeader });
         setDrawingTableData({ projectName, title, drawings, columnsIndexArray, columnsHeader });
         setDrawingTableVisible(true);
     };
 
 
-
-    // const convertDataToSaveRecord = (data) => {
-    //     const allProjectsDwgStatus = convertDataToStackedChart(data).dataChart;
-
-    //     const filterDwgStatus = (projectName, data) => {
-    //         const dwgStatus = data.filter(project => project.name === projectName)[0];
-    //         delete dwgStatus.name;
-    //         let dwgStatusConverted = [];
-    //         for (const key in dwgStatus) {
-    //             dwgStatusConverted.push({
-    //                 status: key,
-    //                 count: dwgStatus[key]
-    //             });
-    //         };
-    //         return dwgStatusConverted;
-    //     };
-
-
-    //     const filterDwgRevision = (data) => {
-    //         const { drawingCount } = mergeUndefined(getAllDrawingSameValueInOneColumn(data, 'Rev'), '0');
-    //         let dwgRevisionConverted = [];
-    //         for (const key in drawingCount) {
-    //             dwgRevisionConverted.push({
-    //                 revision: key,
-    //                 count: drawingCount[key]
-    //             });
-    //         };
-    //         return dwgRevisionConverted;
-    //     };
-
-
-    //     let arr = [];
-    //     for (const projectName in data) {
-    //         arr = [...arr, {
-    //             projectName,
-    //             drawingLateConstruction: randomInteger(9, 30),
-    //             drawingLateApproval: randomInteger(15, 30),
-    //             drawingLateSubmission: randomInteger(9, 25),
-    //             drawingStatus: [
-    //                 {
-    //                     status: 'Approved with comments, to Resubmit',
-    //                     count: randomInteger(35, 60)
-    //                 },
-    //                 {
-    //                     status: 'Approved with Comment, no submission Required',
-    //                     count: randomInteger(35, 60)
-    //                 },
-    //                 {
-    //                     status: 'Approved for Construction',
-    //                     count: randomInteger(35, 60)
-    //                 },
-    //                 {
-    //                     status: 'Consultant reviewing',
-    //                     count: randomInteger(35, 60)
-    //                 },
-    //                 {
-    //                     status: 'Not Started',
-    //                     count: randomInteger(55, 90)
-    //                 },
-    //                 {
-    //                     status: 'Revise In-Progress',
-    //                     count: randomInteger(35, 60)
-    //                 },
-    //                 {
-    //                     status: '1st cut of drawing in-progress',
-    //                     count: randomInteger(35, 60)
-    //                 },
-    //             ],
-    //             drawingByRevision: [
-    //                 {
-    //                     revision: '0',
-    //                     count: randomInteger(65, 100)
-    //                 },
-    //                 {
-    //                     revision: 'A',
-    //                     count: randomInteger(55, 75)
-    //                 },
-    //                 {
-    //                     revision: 'B',
-    //                     count: randomInteger(30, 45)
-    //                 },
-    //                 {
-    //                     revision: 'C',
-    //                     count: randomInteger(20, 40)
-    //                 },
-    //                 {
-    //                     revision: 'D',
-    //                     count: randomInteger(10, 30)
-    //                 },
-    //             ],
-    //             // drawingLateApproval: getDrawingLateNow(data[projectName], 'getApproval').length,
-    //             // drawingLateSubmission: getDrawingLateNow(data[projectName], 'drgToConsultant').length,
-    //             // drawingStatus: filterDwgStatus(projectName, allProjectsDwgStatus),
-    //             // drawingByRevision: filterDwgRevision(data[projectName])
-    //         }];
-    //     };
-    //     console.log(arr);
-    //     return arr;
-    // };
-
-    // const saveRecords = async () => {
-    //     try {
-    //         const res = await api.post('/records', {
-    //             date: new Date(),
-    //             projects: convertDataToSaveRecord(data)
-    //         });
-    //     } catch (err) {
-    //         console.log(err);
-    //     };
-    // };
-
-    // const createDummyRecord = async () => {
-    //     try {
-    //         for (let i = 0; i < 100; i++) {
-    //             const res = await api.post('/records', {
-    //                 date: moment(new Date(2020, 6, 21)).add(i, 'day')._d,
-    //                 projects: convertDataToSaveRecord(data)
-    //             });
-    //         };
-    //     } catch (err) {
-    //         console.log(err);
-    //     };
-    // };
-
-    // const loadRecords = async () => {
-    //     try {
-    //         const res = await api.get('/records');
-    //         setDataRecord(res.data);
-    //         localStorage.setItem('wh-r', JSON.stringify(res.data));
-
-    //         setDataRecord(JSON.parse(localStorage.getItem('wh-r')));
-    //     } catch (err) {
-    //         console.log(err);
-    //     };
-    // };
-
+    const closeTableAndReset = () => {
+        setDrawingTableVisible(false);
+        setDrawingTableData(null);
+    };
 
 
     return (
@@ -277,8 +147,8 @@ const PageDashboard = () => {
                     <Modal
                         title={drawingTableData.projectName}
                         visible={drawingTableVisible}
-                        onOk={() => setDrawingTableVisible(false)}
-                        onCancel={() => setDrawingTableVisible(false)}
+                        onOk={closeTableAndReset}
+                        onCancel={closeTableAndReset}
                         width={0.9 * window.innerWidth}
                         height={0.7 * window.innerHeight}
                         // centered={true}
@@ -294,16 +164,16 @@ const PageDashboard = () => {
                             <h3>{drawingTableData.drawings.length + ' drawings'}</h3>
                         </div>
 
+                        <Button
+                            style={{ background: colorType.grey0, width: '200px', margin: '10px auto' }}
+                            // onClick={() => openDrawingTable()}
+                        >View all drawings</Button>
+
                         <TableDrawingList
                             data={drawingTableData}
                         />
                     </Modal>
                 )}
-
-
-                {/* <ChartBarRecord data={JSON.parse(localStorage.getItem('wh-r'))} /> */}
-
-
 
 
             </div>

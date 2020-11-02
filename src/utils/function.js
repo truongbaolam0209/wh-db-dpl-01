@@ -260,12 +260,13 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
             key === 'Rev' ||
             key === 'Modeller' ||
             key === 'Remark' ||
+            key === 'Coordinator In Charge' ||
             key === 'RFA Ref'
         ) {
             return true;
         };
     };
-    
+
     for (const key in columnsIndexArray) {
 
         if (
@@ -288,7 +289,7 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
                     width: getColumnWidth(data, formatString(key), key),
                 });
             };
-            
+
         };
 
     };
@@ -306,3 +307,6 @@ export const getHeaderSorted = (columnsData, columnsHeader) => {
     });
     return arr;
 };
+
+
+
