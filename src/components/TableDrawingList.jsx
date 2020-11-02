@@ -1,6 +1,6 @@
 import { Icon } from 'antd';
 import React, { useMemo } from 'react';
-import { useExpanded, useFlexLayout, useGroupBy, useResizeColumns, useRowSelect, useTable } from 'react-table';
+import { useExpanded, useFlexLayout, useGroupBy, useResizeColumns, useRowSelect, useSortBy, useTable } from 'react-table';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
 import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
@@ -9,7 +9,9 @@ import scrollbarWidth from './tableDrawingList/scrollbarWidth';
 
 
 
-const headerProps = (props, { column }) => getStyles(props, column.align);
+const headerProps = (props, { column }) => {
+    return getStyles(props, column.align);
+};
 
 const cellProps = (props, { cell }) => getStyles(props, cell.column.align);
 
@@ -48,6 +50,7 @@ const Table = ({ columns, data }) => {
         },
         useGroupBy,
         useExpanded,
+        useSortBy,
         useResizeColumns,
         useFlexLayout,
         useRowSelect,
@@ -64,8 +67,10 @@ const Table = ({ columns, data }) => {
         getTableProps,
         headerGroups,
         rows,
+        totalColumnsWidth,
         prepareRow,
-        totalColumnsWidth
+        disableMultiSort,
+        isMultiSortEvent = (e) => e.shiftKey,
     } = reactTable;
 
 
@@ -76,25 +81,49 @@ const Table = ({ columns, data }) => {
                     {headerGroups.map(headerGroup => (
                         <div className='tr' {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map(column => {
-                                console.log(headerWithNoGroupFunction(column.Header));
+                                console.log(column.Header, column);
                                 return (
-                                    <div {...column.getHeaderProps(headerProps)} className='th'>
+                                    <div
+                                        className='th'
+                                        {...column.getHeaderProps(headerProps)}
+
+                                    >
 
                                         {column.render('Header')}
+
                                         {column.canResize && (
-                                            <div
-                                                {...column.getResizerProps()}
+                                            <div {...column.getResizerProps()}
                                                 className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
                                             />
                                         )}
-                                        {column.canGroupBy ? (
+                                        {column.canGroupBy && (
                                             <span {...column.getGroupByToggleProps()}>
                                                 {headerWithNoGroupFunction(column.Header) ? null
                                                     : column.isGrouped ? <IconTable type='stop' color='red' />
                                                         : <IconTable type='plus-circle' color='green' />
                                                 }
                                             </span>
-                                        ) : null}
+                                        )}
+
+                                        {/* {column.canSort && ( */}
+                                        <span {...column.getSortByToggleProps()}
+                                            onClick={
+                                                column.canSort ? (e) => {
+                                                    console.log('CHECK ...', e);
+                                                    e.persist();
+                                                    column.toggleSortBy(undefined, !disableMultiSort && isMultiSortEvent(e));
+                                                    // listRef.current.scrollToItem(0);
+                                                } : undefined
+                                            }
+                                        >
+                                            {column.isSorted
+                                                ? (column.isSortedDesc
+                                                    ? ' 🔽'
+                                                    : ' 🔼')
+                                                : 'CLICK'}
+                                        </span>
+                                        {/* )} */}
+
 
                                     </div>
                                 )
@@ -106,6 +135,7 @@ const Table = ({ columns, data }) => {
                 <div className='tbody'>
                     {rows.map(row => {
                         prepareRow(row);
+                        console.log(row);
                         return (
                             <div {...row.getRowProps()} className='tr'>
                                 {row.cells.map(cell => {
@@ -160,6 +190,10 @@ const Container = styled.div`
             overflow-x: hidden;
             height: ${0.6 * window.innerHeight - scrollbarWidth() - 40}px;
             width: ${props => props.totalWidth}px;
+
+            .tr:first-child {
+                padding-top: 33px; // shift down the first row of body
+            }
         }
 
         .tr {
@@ -174,7 +208,7 @@ const Container = styled.div`
             color: black;
             margin: 0;
             padding: 0.15rem;
-            padding-left: 0.25rem;
+            padding-left: 0.3rem;
             border-right: 1px solid ${colorType.grey2};
             border-bottom: 1px solid ${colorType.grey2};
             /* In this example we use an absolutely position resizer, so this is required. */
@@ -202,6 +236,10 @@ const Container = styled.div`
                     background: black;
                 }
             }
+        }
+
+        .th {
+            padding: 0.35rem;
         }
     }
 `;

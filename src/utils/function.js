@@ -246,7 +246,13 @@ const getColumnWidth = (rows, accessor, headerText) => {
 
 
 export const getColumnsHeader = (columnsIndexArray, data) => {
-    let columnsName = [];
+    let columnsName = [
+        {
+            Header: 'Index',
+            accessor: (row, i) => i + 1
+        },
+    ];
+    
     for (const key in columnsIndexArray) {
         if (
             key !== 'Delta_Date' &&
