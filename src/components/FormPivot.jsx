@@ -1,6 +1,5 @@
 import { Button, Divider, Modal, Select } from 'antd';
 import React, { useState } from 'react';
-import styled from 'styled-components';
 import { colorType } from '../assets/constant';
 import { createDummyRecords } from '../utils/function';
 import ChartBarRecordPanel from './ChartBarRecordPanel';
@@ -51,10 +50,18 @@ const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
     return (
         <div style={{ marginTop: '10px', padding: '20px' }}>
             {columnsHeader && columnsHeader.map(cl => (
-                <div key={cl} style={{ width: '100%', margin: '10px auto', padding: 5, border: `1px solid ${colorType.grey1}`, borderRadius: 3 }}>
-                    <span style={{ marginRight: 15 }}>{cl}</span>
-                    <Divider type='vertical' />
-                    <SpanOmit style={{ marginRight: 15 }} onClick={onRemoveCategory}>X</SpanOmit>
+                <div key={cl} style={{ display: 'flex', width: '100%', margin: '10px auto', padding: 5, border: `1px solid ${colorType.grey1}`, borderRadius: 3 }}>
+                    <span style={{ marginRight: 5 }}>{cl}</span>
+                    <Divider type='vertical' style={{ height: 21 }} />
+                    <span
+                        style={{
+                            marginRight: 15,
+                            color: colorType.red,
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                        }}
+                        onClick={onRemoveCategory}
+                    >X</span>
                 </div>
             ))}
 
@@ -98,7 +105,6 @@ const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
                 bodyStyle={{ padding: 15 }}
             >
                 <ChartBarRecordPanel
-                    // data={JSON.parse(localStorage.getItem('wh-r'))}
                     data={createDummyRecords()[projectName]}
                 />
             </Modal>
@@ -110,13 +116,4 @@ const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
 export default FormPivot;
 
 
-
-
-const SpanOmit = styled.span`
-    :hover {
-        color: red;
-        cursor: pointer
-    }
-
-`;
 

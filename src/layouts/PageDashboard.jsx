@@ -1,4 +1,4 @@
-import { Button, Col, Divider, Modal, Row, Skeleton } from 'antd';
+import { Col, Divider, Modal, Row, Skeleton } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { colorType } from '../assets/constant';
 import ChartBarDrawing from '../components/ChartBarDrawing';
@@ -19,6 +19,11 @@ import { getDataConverted } from '../utils/function';
 
 
 const PageDashboard = () => {
+
+    useEffect(() => {
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        return () => document.addEventListener('contextmenu', event => event.preventDefault());
+    }, []);
 
 
     const [data, setData] = useState(null);
@@ -63,9 +68,7 @@ const PageDashboard = () => {
 
     const [drawingTableVisible, setDrawingTableVisible] = useState(false);
     const [drawingTableData, setDrawingTableData] = useState(null);
-    const [dataTableNow, setDataTableNow] = useState(null);
     const openDrawingTable = (projectName, title, drawings, columnsIndexArray, columnsHeader) => {
-        // setDataTableNow({ projectName, title, drawings, columnsIndexArray, columnsHeader });
         setDrawingTableData({ projectName, title, drawings, columnsIndexArray, columnsHeader });
         setDrawingTableVisible(true);
     };
@@ -147,7 +150,7 @@ const PageDashboard = () => {
                     <Modal
                         title={drawingTableData.projectName}
                         visible={drawingTableVisible}
-                        onOk={closeTableAndReset}
+                        footer={false}
                         onCancel={closeTableAndReset}
                         width={0.9 * window.innerWidth}
                         height={0.7 * window.innerHeight}
@@ -156,22 +159,23 @@ const PageDashboard = () => {
                             // justifyContent: 'center',
                             // alignItems: 'center'
                         }}
+                        bodyStyle={{
+                            paddingTop: 10
+                        }}
                     >
-                        <h2>{drawingTableData.title.type}</h2>
                         <div style={{ display: 'flex' }}>
-                            <h3>{drawingTableData.title.category}</h3>
-                            <Divider type='vertical' />
-                            <h3>{drawingTableData.drawings.length + ' drawings'}</h3>
+                            <h3 style={{ background: colorType.green, padding: '0 10px' }}>{drawingTableData.title.type}</h3>
+                            <Divider type='vertical' style={{ height: 25 }} />
+                            <h3 style={{ background: colorType.yellow, padding: '0 10px' }}>{drawingTableData.title.category}</h3>
+                            <Divider type='vertical' style={{ height: 25 }} />
+                            <h3 style={{ background: colorType.grey1, padding: '0 10px' }}>{drawingTableData.drawings.length + ' drawings'}</h3>
                         </div>
-
-                        <Button
-                            style={{ background: colorType.grey0, width: '200px', margin: '10px auto' }}
-                            // onClick={() => openDrawingTable()}
-                        >View all drawings</Button>
 
                         <TableDrawingList
                             data={drawingTableData}
+                            title={drawingTableData.title}
                         />
+
                     </Modal>
                 )}
 

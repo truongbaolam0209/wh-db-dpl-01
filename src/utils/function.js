@@ -146,7 +146,7 @@ export const pickDataToTable = (drawings, columnsIndexArray) => {
     drawings.forEach(dwg => {
         let obj = {};
         Object.keys(columnsIndexArray).forEach(header => {
-            obj[formatString(header)] = dwg[columnsIndexArray[header]].value || 'N/A';
+            obj[formatString(header)] = dwg[columnsIndexArray[header]].value || '. . .';
         });
         arr.push(obj);
     });
@@ -245,24 +245,29 @@ export const createDummyRecords = () => {
 const getColumnWidth = (rows, accessor, headerText) => {
     const maxWidth = 400;
     const magicSpacing = 10;
-    const cellLength = Math.max(
-        ...rows.map(row => (`${row[accessor]}` || '').length),
-        headerText.length,
-    );
-    return Math.min(maxWidth, cellLength * magicSpacing);
+    // const cellLength = Math.max(
+    //     ...rows.map(row => (`${row[accessor]}` || '').length),
+    //     headerText.length,
+    // );
+    const cellLength = headerText.length;
+
+    const w = Math.min(maxWidth, cellLength * magicSpacing) * 1.3;
+    return 200;
+    // return w < 200 ? 200 : w;
+    // return w;
+    // return Math.min(maxWidth, cellLength * magicSpacing);
 };
-
-
 
 
 export const getColumnsHeader = (columnsIndexArray, data) => {
     let columnsName = [
         {
-            Header: 'Index',
-            accessor: (row, i) => i + 1
+            Header: '',
+            id: 'index',
+            accessor: (row, i) => i + 1,
+            width: 50
         },
     ];
-
 
     const filterSelect = (key) => {
         if (
@@ -271,6 +276,11 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
             key === 'Modeller' ||
             key === 'Remark' ||
             key === 'Coordinator In Charge' ||
+            key === 'Drg Type' ||
+            key === 'Use For' ||
+            key === 'Block/Zone' ||
+            key === 'Level' ||
+            key === 'Unit/CJ' ||
             key === 'RFA Ref'
         ) {
             return true;
@@ -278,7 +288,6 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
     };
 
     for (const key in columnsIndexArray) {
-
         if (
             key !== 'Delta_Date' &&
             key !== 'Delta_IT_CT' &&
@@ -310,18 +319,21 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
 
 export const getHeaderSorted = (columnsData, columnsHeader) => {
     let arr = [];
-    columnsHeader.forEach(header => {
-        columnsData.forEach(headerData => {
-            if (header === headerData.Header) arr.push(headerData);
+    columnsData.forEach(headerData => {
+        if (headerData.Header === '') {
+            arr.push(headerData);
+            return;
+        };
+        columnsHeader.forEach(header => {
+            if (headerData.Header === header) arr.push(headerData);
         });
     });
     return arr;
 };
 
 
-
-
 export const countAverage = (nums) => nums.reduce((a, b) => (a + b)) / nums.length;
+
 
 export const recordGetAllMonth = (data, category) => {
     let arr = [];
@@ -330,6 +342,7 @@ export const recordGetAllMonth = (data, category) => {
     });
     return [...new Set(arr)];
 };
+
 
 
 export const recordDataToChartDaily = (data, category, month) => {

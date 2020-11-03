@@ -34,7 +34,7 @@ const ChartBarRecordPanel = ({ data }) => {
                 ))}
             </Select>
 
-            <Divider style={{ margin: '10px 0' }} />
+            <Divider style={{ margin: '5px 0 5px 0' }} />
 
             <div style={{ height: 0.7 * window.innerHeight, overflowY: 'scroll' }}>
                 {categoryArrayShown.map(category => (
