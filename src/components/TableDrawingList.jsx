@@ -35,7 +35,9 @@ const headerProps = (props, { column }) => {
     return getStyles(props, column.align);
 };
 
-const cellProps = (props, { cell }) => getStyles(props, cell.column.align);
+const cellProps = (props, { cell }) => {
+    return getStyles(props, cell.column.align);
+};
 
 const getStyles = (props, align = 'left') => [props,
     {
@@ -61,26 +63,40 @@ export const DefaultColumnFilter = ({
 }) => {
     const count = preFilteredRows.length;
 
+    const [btnActive, setBtnActive] = useState(false);
+    const toggleBtn = () => {
+        setBtnActive(!btnActive);
+        setFilter(undefined);
+    };
+
     return (
-        <input
-            value={filterValue || ''}
-            onChange={e => {
-                setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
-            }}
-            placeholder={`Search ${count} records...`}
-        />
+        <div style={{ display: 'flex' }}>
+            <div onClick={toggleBtn} style={{ cursor: 'pointer' }}>
+                {btnActive ? <IconTable type='search' color='green' /> : <IconTable type='search' color='blue' />}
+            </div>
+            {btnActive && (
+                <input
+                    value={filterValue || ''}
+                    onChange={e => {
+                        setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
+                    }}
+                    placeholder={`Search ${count} records...`}
+                    style={{ height: 21, margin: 0 }}
+                />
+            )}
+        </div>
     );
 };
 
 
 
 export const SelectColumnFilter = ({
-    column: { filterValue, setFilter, preFilteredRows, id },
+    column: { filterValue, setFilter, preFilteredRows, id }
 }) => {
 
     const options = useMemo(() => {
         const options = new Set();
-        
+
         preFilteredRows.forEach(row => {
             options.add(row.values[id]);
         });
@@ -88,18 +104,37 @@ export const SelectColumnFilter = ({
         return [...options.values()];
     }, [id, preFilteredRows]);
 
-    return (
-        <select
-            value={filterValue}
-            onChange={e => setFilter(e.target.value || undefined)}>
+    const [btnActive, setBtnActive] = useState(false);
 
-            <option value=''>All</option>
-            {options.map((option, i) => (
-                <option key={i} value={option}>
-                    {option}
-                </option>
-            ))}
-        </select>
+    const toggleBtn = () => {
+        setBtnActive(!btnActive);
+        setFilter(undefined);
+    };
+
+    return (
+        <div style={{ display: 'flex' }}>
+            <div onClick={toggleBtn} style={{ cursor: 'pointer' }}>
+                {btnActive
+                    ? <IconTable type='search' color='green' />
+                    : <IconTable type='search' color='blue' />
+                }
+            </div>
+
+            {btnActive && (
+                <select
+                    value={filterValue}
+                    onChange={e => setFilter(e.target.value || undefined)}
+                    style={{ height: 21, margin: 0 }}
+                >
+                    <option value=''>All</option>
+                    {options.map((option, i) => (
+                        <option key={i} value={option}>
+                            {option}
+                        </option>
+                    ))}
+                </select>
+            )}
+        </div>
     );
 };
 
@@ -181,13 +216,13 @@ const Table = ({ columns, data }) => {
 
 
     const RenderRow = useCallback(args => {
-
         const { index, style } = args;
         const row = rows[index];
         prepareRow(row);
         return (
             <div {...row.getRowProps({ style })} className='tr'>
                 {row.cells.map(cell => {
+                    // console.log(row.index % 2 === 0);
                     return (
                         <div {...cell.getCellProps(cellProps)} className='td'>
                             {cell.isGrouped ? (
@@ -218,26 +253,28 @@ const Table = ({ columns, data }) => {
                         {headerGroups.map(headerGroup => (
                             <div className='tr' {...headerGroup.getHeaderGroupProps()}>
                                 {headerGroup.headers.map(column => {
-                                    // console.log(column.Header, column);
+                                    // console.log(column);
                                     return (
                                         <div
                                             className='th'
                                             {...column.getHeaderProps(headerProps)}
 
                                         >
-
-                                            {column.render('Header')}
-
                                             {column.canResize && (
                                                 <div {...column.getResizerProps()}
                                                     className={`resizer ${column.isResizing ? 'isResizing' : ''}`}
                                                 />
                                             )}
-                                            {column.canGroupBy && (
+
+                                            <div style={{ fontWeight: 'bold', marginRight: 10 }}>
+                                                {column.render('Header')}
+                                            </div>
+
+                                            {column.canGroupBy && column.Header !== 'Index' && (
                                                 <span {...column.getGroupByToggleProps()}>
                                                     {headerWithNoGroupFunction(column.Header) ? null
                                                         : column.isGrouped ? <IconTable type='stop' color='red' />
-                                                            : <IconTable type='plus-circle' color='green' />
+                                                            : <IconTable type='plus-circle' color='blue' />
                                                     }
                                                 </span>
                                             )}
@@ -254,12 +291,20 @@ const Table = ({ columns, data }) => {
                                             >
                                                 {column.isSorted
                                                     ? (column.isSortedDesc
-                                                        ? <IconTable type='sort-ascending' />
-                                                        : <IconTable type='sort-descending' />)
-                                                    : <IconTable type='ordered-list' />}
+                                                        ? <IconTable type='sort-ascending' color='green' />
+                                                        : <IconTable type='sort-descending' color='green' />)
+                                                    : <IconTable type='ordered-list' color='blue' />}
                                             </span>
 
-                                            <span>{column.canFilter ? column.render('Filter') : null}</span>
+
+
+                                            <span>
+                                                {column.canFilter && column.Header !== 'Index'
+                                                    ? column.render('Filter') : null
+                                                }
+                                            </span>
+
+
 
 
 
@@ -275,7 +320,7 @@ const Table = ({ columns, data }) => {
                             ref={listRef}
                             height={400}
                             itemCount={rows.length}
-                            itemSize={35}
+                            itemSize={25}
                             width={totalColumnsWidth + scrollbarWidth()}
                         >
                             {RenderRow}
@@ -306,12 +351,12 @@ const Container = styled.div`
         .thead {
             position: absolute;
             z-index: 1000;
-            background-color: ${colorType.grey3};
+            background-color: ${colorType.grey1};
             top: 0;
         }
 
         .tbody {
-            padding-top: 39px;
+            padding-top: 33px;
             overflow-y: auto;
             overflow-x: hidden;
             height: ${0.6 * window.innerHeight - scrollbarWidth() - 40}px;
@@ -328,11 +373,15 @@ const Container = styled.div`
                 }
             }
         }
+
+        .tr:nth-child(even) {
+            background-color: ${colorType.grey4};
+        }
         
         .th, .td {
             color: black;
             margin: 0;
-            padding: 0.15rem;
+            padding: 0.1rem;
             padding-left: 0.3rem;
             border-right: 1px solid ${colorType.grey2};
             border-bottom: 1px solid ${colorType.grey2};
@@ -349,8 +398,8 @@ const Container = styled.div`
             }
             .resizer {
                 right: 0;
-                background: ${colorType.grey2};
-                width: 0.5px;
+                background: ${colorType.grey1};
+                width: 5px;
                 height: 100%;
                 position: absolute;
                 top: 0;
@@ -358,13 +407,13 @@ const Container = styled.div`
                 /* prevents from scrolling while dragging on touch devices */
                 touch-action :none;
                 &.isResizing {
-                    background: black;
+                    background: ${colorType.grey2};
                 }
             }
         }
 
         .th {
-            padding: 0.35rem;
+            padding: 0.4rem;
         }
     }
 `;
@@ -392,7 +441,10 @@ const TableDrawingList = ({ data }) => {
     }, [columnsHeader, columnsName]);
 
     return (
-        <Table columns={columns} data={tableDataInput} />
+        <Table
+            columns={columns}
+            data={tableDataInput}
+        />
     );
 };
 export default TableDrawingList;

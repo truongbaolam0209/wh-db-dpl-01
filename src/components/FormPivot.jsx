@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
 import { createDummyRecords } from '../utils/function';
-import ChartBarRecord from './ChartBarRecord';
+import ChartBarRecordPanel from './ChartBarRecordPanel';
 
 
 
@@ -71,7 +71,7 @@ const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
                     <Select.Option value={cl} key={cl}>{cl}</Select.Option>
                 ))}
             </Select>
-            
+
             <div style={{ display: 'flex' }}>
                 <Button
                     style={{ background: colorType.grey0, width: '90%', margin: '10px auto' }}
@@ -93,13 +93,13 @@ const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
                 visible={chartRecord}
                 onCancel={() => setChartRecord(false)}
                 width={0.9 * window.innerWidth}
-                height={600}
+                // height={0.9 * window.innerHeight}
                 footer={null}
+                bodyStyle={{ padding: 15 }}
             >
-                <ChartBarRecord
+                <ChartBarRecordPanel
                     // data={JSON.parse(localStorage.getItem('wh-r'))}
-                    data={createDummyRecords()}
-                    projectName={projectName}
+                    data={createDummyRecords()[projectName]}
                 />
             </Modal>
 

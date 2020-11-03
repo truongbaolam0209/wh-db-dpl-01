@@ -18,7 +18,6 @@ import { getDataConverted } from '../utils/function';
 
 
 
-
 const PageDashboard = () => {
 
 
@@ -76,6 +75,7 @@ const PageDashboard = () => {
         setDrawingTableVisible(false);
         setDrawingTableData(null);
     };
+
 
 
     return (

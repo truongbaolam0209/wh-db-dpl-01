@@ -211,24 +211,33 @@ export const randomInteger = (min, max) => {
 
 
 export const createDummyRecords = () => {
-    let dummyRecords = [];
 
-    for (let i = 0; i < 100; i++) {
-
-        dummyRecords.push({
-            date: moment(new Date(2020, 6, 21)).add(i, 'day')._d,
-            projects: [
-                {
-                    projectName: 'Handy',
-                    drawingLateApproval: randomInteger(30, 60)
-                },
-                {
-                    projectName: 'Sumang',
-                    drawingLateApproval: randomInteger(30, 60)
-                },
-            ]
+    let project = ['Handy', 'Sumang'];
+    let categoryArr = [
+        'drawingLateApproval',
+        'drawingLateSubmission',
+        'drawingLateConstruction',
+        'drawingApprovedForConstruction',
+        'drawingApprovedWithCommentNoSubmissionRequired',
+        'drawingApprovedWithCommentsToResubmit',
+        // 'drawingReviseInProgress',
+        // 'drawingConsultantReviewing',
+        // 'drawing1stCutOfDrawingInProgress',
+        // 'drawingNotStarted',
+    ];
+    let dummyRecords = {};
+    project.forEach(pr => {
+        let recordArray = {};
+        categoryArr.forEach(cate => {
+            let arr = {};
+            for (let i = 0; i < 100; i++) {
+                arr[moment(new Date(2020, 6, 21)).add(i, 'day')._d] = randomInteger(1, 15);
+            };
+            recordArray[cate] = arr;
         });
-    };
+        dummyRecords[pr] = recordArray;
+
+    });
     return dummyRecords;
 };
 
@@ -242,6 +251,7 @@ const getColumnWidth = (rows, accessor, headerText) => {
     );
     return Math.min(maxWidth, cellLength * magicSpacing);
 };
+
 
 
 
@@ -310,3 +320,82 @@ export const getHeaderSorted = (columnsData, columnsHeader) => {
 
 
 
+
+export const countAverage = (nums) => nums.reduce((a, b) => (a + b)) / nums.length;
+
+export const recordGetAllMonth = (data, category) => {
+    let arr = [];
+    Object.keys(data[category]).forEach(item => {
+        arr.push(moment(item).add(-1, 'day').format('MM/YY'));
+    });
+    return [...new Set(arr)];
+};
+
+
+export const recordDataToChartDaily = (data, category, month) => {
+    let arr = [];
+    Object.keys(data[category]).forEach(item => {
+        const date = moment(item).add(-1, 'day');
+        if (date.format('MM/YY') === month) {
+            arr.push({
+                date: date.format('DD'),
+                value: data[category][item]
+            });
+        };
+    });
+    return arr;
+};
+
+
+export const recordDataToChartWeekly = (data, category) => {
+    let arr = [];
+    Object.keys(data[category]).forEach(item => {
+        const date = moment(item).add(-1, 'day');
+        arr.push({
+            week: date.format('W'),
+            month: date.format('MM'),
+            year: date.format('YY'),
+            value: data[category][item]
+        });
+    });
+    let groups = {};
+    for (let i = 0; i < arr.length; i++) {
+        let weekName = `W${arr[i].week} ${arr[i].month}/${arr[i].year}`;
+        if (!groups[weekName]) {
+            groups[weekName] = [];
+        };
+        groups[weekName].push(arr[i].value);
+    };
+    let arrOutput = [];
+    for (let week in groups) {
+        arrOutput.push({ week, value: Math.round(countAverage(groups[week])) });
+    };
+    return arrOutput;
+};
+
+
+export const recordDataToChartMonthly = (data, category) => {
+    let arr = [];
+    Object.keys(data[category]).forEach(item => {
+        const date = moment(item).add(-1, 'day');
+        arr.push({
+            week: date.format('W'),
+            month: date.format('MM'),
+            year: date.format('YY'),
+            value: data[category][item]
+        });
+    });
+    let groups = {};
+    for (let i = 0; i < arr.length; i++) {
+        let monthName = `${arr[i].month}/${arr[i].year}`;
+        if (!groups[monthName]) {
+            groups[monthName] = [];
+        };
+        groups[monthName].push(arr[i].value);
+    };
+    let arrOutput = [];
+    for (let month in groups) {
+        arrOutput.push({ month, value: Math.round(countAverage(groups[month])) });
+    };
+    return arrOutput;
+};
