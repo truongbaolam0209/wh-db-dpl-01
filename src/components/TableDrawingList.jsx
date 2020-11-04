@@ -284,7 +284,7 @@ const Table = ({
 
    } = reactTable;
 
-   const { globalFilter, hiddenColumns, groupBy, expanded } = state;
+   const { globalFilter, expanded } = state;
    const [panelFunctionVisible, setPanelFunctionVisible] = useState(false);
    const [topPanelFunction, setTopPanelFunction] = useState(0);
    const [leftPanelFunction, setLeftPanelFunction] = useState(0);

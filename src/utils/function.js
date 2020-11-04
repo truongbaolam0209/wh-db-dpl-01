@@ -243,13 +243,13 @@ export const createDummyRecords = () => {
 
 
 const getColumnWidth = (rows, accessor, headerText) => {
-    const maxWidth = 400;
-    const magicSpacing = 10;
+    // const maxWidth = 400;
+    // const magicSpacing = 10;
     // const cellLength = Math.max(
     //     ...rows.map(row => (`${row[accessor]}` || '').length),
     //     headerText.length,
     // );
-    const cellLength = headerText.length;
+    // const cellLength = headerText.length;
 
     // const w = Math.min(maxWidth, cellLength * magicSpacing) * 1.3;
     return 200;
