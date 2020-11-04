@@ -251,7 +251,7 @@ const getColumnWidth = (rows, accessor, headerText) => {
     // );
     const cellLength = headerText.length;
 
-    const w = Math.min(maxWidth, cellLength * magicSpacing) * 1.3;
+    // const w = Math.min(maxWidth, cellLength * magicSpacing) * 1.3;
     return 200;
     // return w < 200 ? 200 : w;
     // return w;

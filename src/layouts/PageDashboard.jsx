@@ -21,8 +21,8 @@ import { getDataConverted } from '../utils/function';
 const PageDashboard = () => {
 
     useEffect(() => {
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        return () => document.addEventListener('contextmenu', event => event.preventDefault());
+        // document.addEventListener('contextmenu', event => event.preventDefault());
+        // return () => document.addEventListener('contextmenu', event => event.preventDefault());
     }, []);
 
 

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 
 const PanelRightClick = (props) => {
 
-    const { top, left, listButton, buttonPanelRightClick } = props;
+    const { top, left, listButton, buttonPanelFunction } = props;
 
     return (
         <>
@@ -20,7 +20,7 @@ const PanelRightClick = (props) => {
                 {listButton.map(btn => (
                     <Menu.Item key={btn}>
                         <Container 
-                        onMouseDown={() => buttonPanelRightClick(btn)}
+                        onMouseDown={() => buttonPanelFunction(btn)}
                         >{btn}</Container>
                     </Menu.Item>
                 ))}

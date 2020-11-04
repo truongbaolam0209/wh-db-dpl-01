@@ -37,6 +37,9 @@ const headerProps = (props, { column }) => {
 };
 
 const cellProps = (props, { cell }) => {
+   props.style.background = cell.isGrouped ? '#0aff0082' :
+      cell.isAggregated ? '#ffa50078' :
+         cell.isPlaceholder ? '#ff000042' : 'white';
    return getStyles(props, cell.column.align);
 };
 
@@ -158,7 +161,16 @@ export const GlobalFilter = ({ filter, setFilter }) => {
    );
 };
 
+const getItemStyle = ({ isDragging, isDropAnimating }, draggableStyle) => {
 
+   return ({
+      ...draggableStyle,
+      userSelect: 'none',
+      background: isDragging ? 'lightgreen' : 'grey',
+      ...(!isDragging && { transform: 'translate(0,0)' }),
+      ...(isDropAnimating && { transitionDuration: '0.001s' })
+   })
+};
 
 
 
@@ -175,14 +187,14 @@ const TableDrawingList = ({ data, title }) => {
 
    const columns = useMemo(() => {
       return columnsHeader && !openAllColumn ? getHeaderSorted(columnsName, columnsHeader) : columnsName;
-   }, [columnsHeader, columnsName]);
+   }, [columnsHeader, columnsName, openAllColumn]);
 
    const openAllColumnTable = () => {
       setOpenAllColumn(true);
    };
 
 
-   
+
    return (
       <Table
          title={title}
@@ -195,7 +207,7 @@ const TableDrawingList = ({ data, title }) => {
                cl.Header === 'Model Progress' ||
                cl.Header === 'Drawing Progress'
          ).map(x => x.accessor)}
-         
+
       />
    );
 };
@@ -211,6 +223,7 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
       // maxWidth: 200, // maxWidth is only used as a limit for resizing
       Filter: DefaultColumnFilter,
    }), []);
+
    const scrollBarSize = useMemo(() => scrollbarWidth(), []);
 
 
@@ -299,7 +312,7 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
    };
 
    const [columnActive, setColumnActive] = useState(false);
-   const buttonPanelRightClick = (btn) => {
+   const buttonPanelFunction = (btn) => {
       if (btn === 'Hide this column') {
          columnActive.toggleHidden(true);
       } else if (btn === 'Unhide all') {
@@ -348,7 +361,7 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
                   onClick={openAllColumnTable}
                >View all drawings</Button>
             )}
-            
+
          </div>
 
 
@@ -429,7 +442,7 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
                      height={500}
                      itemCount={rows.length}
                      itemSize={25}
-                     width={totalColumnsWidth + scrollbarWidth()}
+                     width={totalColumnsWidth + scrollBarSize}
                   >
                      {RenderRow}
                   </FixedSizeList>
@@ -442,13 +455,14 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
             <PanelRightClick
                left={leftPanelFunction} top={topPanelFunction}
                listButton={['Hide this column', 'Unhide all']}
-               buttonPanelRightClick={buttonPanelRightClick}
+               buttonPanelFunction={buttonPanelFunction}
             />
          )}
 
       </>
    );
 };
+
 
 const Container = styled.div`
 
