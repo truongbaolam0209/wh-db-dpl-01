@@ -5,7 +5,15 @@ import styled from 'styled-components';
 
 const PanelRightClick = (props) => {
 
-    const { top, left, listButton, buttonPanelFunction } = props;
+    const { top, left, buttonPanelFunction } = props;
+
+    const listButton = [
+        'Hide this column', 
+        'Unhide all',
+        'Move to left',
+        'Move to right',
+        'Move to ...'
+    ];
 
     return (
         <>

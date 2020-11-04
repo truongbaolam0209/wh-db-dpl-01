@@ -8,40 +8,29 @@ export const colorType = {
     grey3: '#dfe4ea',
     grey4: '#f1f2f6',
     red: '#b33939',
-    green: '#05c46b',
+    green: '#009432',
     blue: '#0984e3',
     orange: '#cc8e35',
+    purple: '#303952'
 };
 
-export const pieChartColors = [
-    '#fff200',
-    '#05c46b',
-    '#b33939',
-    '#0984e3',
-    '#cc8e35',
-    '#9b59b6',
-    '#2c3e50',
-    '#4cd137',
-    '#d1ccc0'
-];
+
 
 export const pieChartColors2 = {
-    'Approved with comments, to Resubmit': '#fff200',
-    'Approved with Comment, no submission Required': '#05c46b',
-    'Approved for Construction': '#b33939',
-    'Consultant reviewing': '#0984e3',
-    'Not Started': '#cc8e35',
-    'Revise In-Progress': '#9b59b6',
-    '1st cut of drawing in-progress': '#2c3e50',
+    'Approved with comments, to Resubmit': colorType.purple,
+    'Approved with Comment, no submission Required': colorType.blue,
+    'Approved for Construction': colorType.green,
+    'Consultant reviewing': colorType.grey2,
+    'Not Started': colorType.orange,
+    'Revise In-Progress': colorType.yellow,
+    '1st cut of drawing in-progress': colorType.red,
 
 
-
-
-    'Modelling': '#fff200',
-    'Shopdrawing': '#05c46b',
-    'Submit To Consultant': '#b33939',
-    'Consultant Reply': '#0984e3',
-    'Get Approval': '#cc8e35'
+    'Modelling': colorType.yellow,
+    'Shopdrawing': colorType.red,
+    'Submit To Consultant': colorType.orange,
+    'Consultant Reply': colorType.blue,
+    'Get Approval': colorType.green
 };
 
 

@@ -1,7 +1,8 @@
 import { Button, Icon, Input } from 'antd';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
    useBlockLayout,
+   useColumnOrder,
    useExpanded,
    useFilters,
    useFlexLayout,
@@ -15,7 +16,7 @@ import {
 import { FixedSizeList } from 'react-window';
 import styled from 'styled-components';
 import { colorType } from '../assets/constant';
-import { getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
+import { changeColumnOrder, formatStringNameToId, getColumnsHeader, getHeaderSorted, pickDataToTable } from '../utils/function';
 import PanelRightClick from './ui/PanelRightClick';
 
 
@@ -161,46 +162,47 @@ export const GlobalFilter = ({ filter, setFilter }) => {
    );
 };
 
-const getItemStyle = ({ isDragging, isDropAnimating }, draggableStyle) => {
-
-   return ({
-      ...draggableStyle,
-      userSelect: 'none',
-      background: isDragging ? 'lightgreen' : 'grey',
-      ...(!isDragging && { transform: 'translate(0,0)' }),
-      ...(isDropAnimating && { transitionDuration: '0.001s' })
-   })
-};
-
-
 
 
 const TableDrawingList = ({ data, title }) => {
 
    const [openAllColumn, setOpenAllColumn] = useState(false);
 
-   const { drawings, columnsIndexArray, columnsHeader } = data;
+   const { drawings, columnsIndexArray, columnsHeaderSorted, isSelectedShownOnly } = data;
 
    const tableDataInput = pickDataToTable(drawings, columnsIndexArray);
 
    const columnsName = getColumnsHeader(columnsIndexArray, tableDataInput);
 
+
    const columns = useMemo(() => {
-      return columnsHeader && !openAllColumn ? getHeaderSorted(columnsName, columnsHeader) : columnsName;
-   }, [columnsHeader, columnsName, openAllColumn]);
+      return columnsHeaderSorted && !openAllColumn && isSelectedShownOnly ? getHeaderSorted(columnsName, columnsHeaderSorted) : columnsName;
+   }, [columnsHeaderSorted, columnsName, openAllColumn, isSelectedShownOnly]);
+
+
+   const [reorderColumns, setReorderColumns] = useState(false);
+   const columnsInput = reorderColumns ? reorderColumns : columns;
+
 
    const openAllColumnTable = () => {
       setOpenAllColumn(true);
    };
 
+   const moveColumnLocation = (value, columnActive) => {
+      if (value === 1 || value === -1) {
+         setReorderColumns(changeColumnOrder(columnsInput, columnActive.id, value));
+      };
+   };
 
 
    return (
       <Table
          title={title}
-         columns={columns}
+         columns={columnsInput}
          data={tableDataInput}
          openAllColumnTable={openAllColumnTable}
+         moveColumnLocation={moveColumnLocation}
+         columnsHeaderSorted={columnsHeaderSorted}
          hiddenColumnsArray={columns.filter(
             cl => cl.Header.includes('(A)') ||
                cl.Header.includes('(T)') ||
@@ -214,9 +216,18 @@ const TableDrawingList = ({ data, title }) => {
 export default TableDrawingList;
 
 
-const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title }) => {
 
-   const listRef = React.useRef();
+const Table = ({
+   columns,
+   data,
+   hiddenColumnsArray,
+   openAllColumnTable,
+   title,
+   moveColumnLocation,
+   columnsHeaderSorted
+}) => {
+
+   const listRef = useRef();
    const defaultColumn = useMemo(() => ({
       // minWidth: 30, // minWidth is only used as a limit for resizing
       // width: 150, // width is used for both the flex-basis and flex-grow
@@ -226,7 +237,6 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
 
    const scrollBarSize = useMemo(() => scrollbarWidth(), []);
 
-
    const reactTable = useTable(
       {
          columns,
@@ -234,7 +244,8 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
          defaultColumn,
          initialState: {
             hiddenColumns: hiddenColumnsArray
-         }
+         },
+         autoResetExpanded: false,
       },
       useFilters,
       useGlobalFilter,
@@ -245,6 +256,7 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
       useFlexLayout,
       useRowSelect,
       useBlockLayout,
+      useColumnOrder,
       hooks => {
          hooks.useInstanceBeforeDimensions.push(({ headerGroups }) => {
             // fix the parent group of the selection button to not be resizable
@@ -263,22 +275,46 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
       prepareRow,
       disableMultiSort,
       isMultiSortEvent = (e) => e.shiftKey,
-      state: { globalFilter, hiddenColumns },
+      state,
       setGlobalFilter,
       toggleHideAllColumns,
+      toggleGroupBy,
+      toggleExpanded,
+      expandedRows
 
    } = reactTable;
 
-
-
-
+   const { globalFilter, hiddenColumns, groupBy, expanded } = state;
    const [panelFunctionVisible, setPanelFunctionVisible] = useState(false);
    const [topPanelFunction, setTopPanelFunction] = useState(0);
    const [leftPanelFunction, setLeftPanelFunction] = useState(0);
+
    useEffect(() => {
       document.addEventListener('mousedown', handleMouseDown);
       return () => document.removeEventListener('mousedown', handleMouseDown);
    }, []);
+
+
+   useEffect(() => {
+      columnsHeaderSorted && columnsHeaderSorted.forEach(name => {
+         if (name !== 'Drawing Name' && name !== 'Drawing Number') {
+            toggleGroupBy(formatStringNameToId(name), true);
+         };
+      });
+   }, []);
+
+
+   const [maxRowExpand, setMaxRowExpand] = useState(0);
+   useEffect(() => {
+      setMaxRowExpand(Object.values(expanded).length);
+
+      if (Object.values(expanded).length >= maxRowExpand) {
+         expandedRows.forEach(row => {
+            toggleExpanded(row.id, true);
+         });
+      };
+   }, [expandedRows]);
+
 
    const handleMouseDown = (e) => {
       if (e.button === 0) setPanelFunctionVisible(false);
@@ -317,7 +353,13 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
          columnActive.toggleHidden(true);
       } else if (btn === 'Unhide all') {
          toggleHideAllColumns(false);
-      };
+      } else if (btn === 'Move to left') {
+         moveColumnLocation(-1, columnActive);
+      } else if (btn === 'Move to right') {
+         moveColumnLocation(1, columnActive);
+      } else if (btn === 'Move to ...') {
+         return;
+      }
    };
 
 
@@ -326,9 +368,11 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
       const { index, style } = args;
       const row = rows[index];
       prepareRow(row);
+
       return (
          <div {...row.getRowProps({ style })} className='tr'>
             {row.cells.map(cell => {
+
                return (
                   <div {...cell.getCellProps(cellProps)} className='td'>
                      {cell.isGrouped ? (
@@ -353,13 +397,11 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
 
    return (
       <>
-         <div style={{ display: 'flex' }}>
+         <div style={{ display: 'flex', marginBottom: 15 }}>
             <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
+
             {title.type === 'Sorted table' && (
-               <Button
-                  style={{ background: colorType.grey0 }}
-                  onClick={openAllColumnTable}
-               >View all drawings</Button>
+               <Button onClick={openAllColumnTable} type='primary' style={{ marginLeft: 15 }}>View all drawings</Button>
             )}
 
          </div>
@@ -454,7 +496,6 @@ const Table = ({ columns, data, hiddenColumnsArray, openAllColumnTable, title })
          {panelFunctionVisible && (
             <PanelRightClick
                left={leftPanelFunction} top={topPanelFunction}
-               listButton={['Hide this column', 'Unhide all']}
                buttonPanelFunction={buttonPanelFunction}
             />
          )}
@@ -471,7 +512,7 @@ const Container = styled.div`
     display: block;
     overflow: scroll;
     overflow-y: hidden;
-    border: 1px solid red;
+    border: 1px solid ${colorType.grey2};
 
 
     .table {

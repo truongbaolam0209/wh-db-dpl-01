@@ -135,7 +135,7 @@ export const mergeUndefined = ({ drawingCount, drawingList }, mergeWith, columns
 };
 
 
-export const formatString = (str) => {
+export const formatStringNameToId = (str) => {
     let mystring = str.replace(/ /g, '').replace(/\(|\)/g, '');
     return mystring.charAt(0).toLowerCase() + mystring.slice(1);
 };
@@ -146,7 +146,7 @@ export const pickDataToTable = (drawings, columnsIndexArray) => {
     drawings.forEach(dwg => {
         let obj = {};
         Object.keys(columnsIndexArray).forEach(header => {
-            obj[formatString(header)] = dwg[columnsIndexArray[header]].value || '. . .';
+            obj[formatStringNameToId(header)] = dwg[columnsIndexArray[header]].value || '. ';
         });
         arr.push(obj);
     });
@@ -297,15 +297,15 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
             if (filterSelect(key)) {
                 columnsName.push({
                     Header: key,
-                    accessor: formatString(key),
+                    accessor: formatStringNameToId(key),
                     Filter: SelectColumnFilter,
-                    width: getColumnWidth(data, formatString(key), key),
+                    width: getColumnWidth(data, formatStringNameToId(key), key),
                 });
             } else {
                 columnsName.push({
                     Header: key,
-                    accessor: formatString(key),
-                    width: getColumnWidth(data, formatString(key), key),
+                    accessor: formatStringNameToId(key),
+                    width: getColumnWidth(data, formatStringNameToId(key), key),
                 });
             };
 
@@ -411,4 +411,20 @@ export const recordDataToChartMonthly = (data, category) => {
         arrOutput.push({ month, value: Math.round(countAverage(groups[month])) });
     };
     return arrOutput;
+};
+
+
+
+
+export const changeColumnOrder = (arr, accessor, leftOrRight, to) => {
+    const array = [...arr];
+    let cl = array.find(item => item.accessor === accessor);
+    const index = array.indexOf(cl);
+    const f = array.splice(index, 1)[0];
+    if (leftOrRight) {
+        array.splice(index + leftOrRight, 0, f);
+    } else {
+        array.splice(to, 0, f);
+    };
+    return array;
 };

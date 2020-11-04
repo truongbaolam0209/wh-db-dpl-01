@@ -11,45 +11,62 @@ const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
     const { columnsIndexArray, allDrawingsLatestRevision } = data;
 
 
-    const [columnsHeader, setColumnsHeader] = useState(null);
+    const [columnsHeaderSorted, setColumnsHeaderSorted] = useState(null);
     const [titleLeft, setTitleLeft] = useState(Object.keys(columnsIndexArray));
     const [value, setValue] = useState('Select an option...');
     const [chartRecord, setChartRecord] = useState(false);
+    const [modalConfirm, setModalConfirm] = useState(false);
 
 
     const onChange = value => {
         setValue('Select an option...');
         setTitleLeft(titleLeft.filter(title => title !== value));
-        setColumnsHeader([...columnsHeader || [], value]);
+        setColumnsHeaderSorted([...columnsHeaderSorted || [], value]);
     };
 
-
+    
     const onResetHandle = () => {
-        setColumnsHeader(null);
+        setColumnsHeaderSorted(null);
         setTitleLeft(Object.keys(columnsIndexArray));
     };
 
 
     const onRemoveCategory = (e) => {
         const btnName = e.target.previousSibling.previousSibling.innerText;
-        setColumnsHeader(columnsHeader.filter(x => x !== btnName));
+        setColumnsHeaderSorted(columnsHeaderSorted.filter(x => x !== btnName));
     };
 
 
     const sortedTableOpen = () => {
+        if (!columnsHeaderSorted) {
+            openDrawingTable(
+                projectName,
+                { type: 'Sorted table', category: 'category test' },
+                allDrawingsLatestRevision,
+                columnsIndexArray,
+                null
+            );
+        } else {
+            setModalConfirm(true);
+        }
+    };
+
+
+    const confirmShowSelected = (bln) => {
         openDrawingTable(
             projectName,
-            { type: 'Sorted table', category: 'category test XXX' },
+            { type: 'Sorted table', category: 'category test' },
             allDrawingsLatestRevision,
             columnsIndexArray,
-            columnsHeader ? columnsHeader : null
+            columnsHeaderSorted,
+            bln
         );
     };
 
 
     return (
         <div style={{ marginTop: '10px', padding: '20px' }}>
-            {columnsHeader && columnsHeader.map(cl => (
+            {columnsHeaderSorted && columnsHeaderSorted.map(cl => (
                 <div key={cl} style={{ display: 'flex', width: '100%', margin: '10px auto', padding: 5, border: `1px solid ${colorType.grey1}`, borderRadius: 3 }}>
                     <span style={{ marginRight: 5 }}>{cl}</span>
                     <Divider type='vertical' style={{ height: 21 }} />
@@ -108,6 +125,26 @@ const FormPivot = ({ projectName, data, dataRecord, openDrawingTable }) => {
                     data={createDummyRecords()[projectName]}
                 />
             </Modal>
+
+            <Modal
+                title='All columns or not ?????'
+                visible={modalConfirm}
+                onCancel={() => setModalConfirm(false)}
+                footer={null}
+            >
+                <Button onClick={() => {
+                    confirmShowSelected(true);
+                    setModalConfirm(false);
+                }}>Selected only</Button>
+
+                <Button onClick={() => {
+                    confirmShowSelected(false);
+                    setModalConfirm(false);
+                }}>Show all</Button>
+
+            </Modal>
+
+
 
         </div>
     );
