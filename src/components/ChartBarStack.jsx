@@ -1,5 +1,5 @@
 
-import { Badge } from 'antd';
+import { Badge, Skeleton } from 'antd';
 import React, { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, LabelList, Tooltip, XAxis, YAxis } from 'recharts';
 import styled from 'styled-components';
@@ -14,10 +14,10 @@ const ChartBarStack = ({ data, title }) => {
 
 
     const inputData = title === 'Drawing Status' ? convertDataToStackedChart(data).dataChart
-        : title === 'Productivity - (days per drawing)' ? data.inputData : null;
+        : title === 'Productivity - (days per drawing)' ? data && data.inputData : null;
 
     const inputStack = title === 'Drawing Status' ? convertDataToStackedChart(data).itemArr
-        : title === 'Productivity - (days per drawing)' ? data.inputStack : null;
+        : title === 'Productivity - (days per drawing)' ? data && data.inputStack : null;
 
 
     const LabelCustomStacked = (props) => {
@@ -79,17 +79,21 @@ const ChartBarStack = ({ data, title }) => {
     };
 
 
+    const totalHeight = 502;
+    const chartHeight = 320;
+
+
     return (
         <CardPanel
             title={title}
             headColor={colorType.orange}
         >
-            {data && (
+            {data ? (
                 <>
                     <BarChart
                         data={inputData}
                         width={chartWidth}
-                        height={320}
+                        height={chartHeight}
                         margin={{ top: 35, right: 20, left: 15, bottom: 30 }}
                         padding={{ top: 10 }}
                         barSize={30}
@@ -115,7 +119,8 @@ const ChartBarStack = ({ data, title }) => {
 
                     </BarChart>
 
-                    <div style={{ paddingLeft: 50, height: 180 }}>
+                    <div style={{ paddingLeft: 20, height: totalHeight - chartHeight }}>
+
                         {sortStatusOrder(inputStack).reverse().map((key, i) => (
                             <div key={key} style={{ display: 'flex' }}>
                                 <StyledBadge
@@ -125,9 +130,15 @@ const ChartBarStack = ({ data, title }) => {
                                 />
                             </div>
                         ))}
+
                     </div>
                 </>
-            )}
+            ) : (
+                    <div style={{ padding: '0 20px' }}>
+                        <Skeleton paragraph={{ rows: 14 }} active />
+                    </div>
+                )
+            }
 
         </CardPanel>
     );

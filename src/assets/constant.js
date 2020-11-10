@@ -11,7 +11,9 @@ export const colorType = {
     green: '#009432',
     blue: '#0984e3',
     orange: '#cc8e35',
-    purple: '#303952'
+    purple: '#303952',
+    rose: '#e84118',
+    black: 'black'
 };
 
 
@@ -26,11 +28,9 @@ export const pieChartColors2 = {
     '1st cut of drawing in-progress': colorType.red,
 
 
-    'Modelling': colorType.yellow,
-    'Shopdrawing': colorType.red,
-    'Submit To Consultant': colorType.orange,
-    'Consultant Reply': colorType.blue,
-    'Get Approval': colorType.green
+    'Consultant review and reply': colorType.blue,
+    'Create update drawing': colorType.orange,
+    'Create update model': colorType.green,
 };
 
 

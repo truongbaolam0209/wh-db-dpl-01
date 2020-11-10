@@ -14,8 +14,26 @@ export const api = Axios.create({
 });
 
 
-export const getDataConverted = (projectArray) => {
 
+export const removeUnwantedHeaders = (columnsIndexArray) => {
+
+    const unwantedHeader = [
+        'Delta_Date',
+        'Delta_IT_CT',
+        'Delta_Issue',
+        'Delta_KTP'
+    ];
+    unwantedHeader.forEach(hd => {
+        delete columnsIndexArray[hd];
+    });
+    return columnsIndexArray;
+};
+
+
+
+
+export const getDataConverted = (projectArray) => {
+    console.log(projectArray);
     let dataOutput = {};
     for (let i = 0; i < projectArray.length; i++) {
 
@@ -58,8 +76,9 @@ export const getDataConverted = (projectArray) => {
             };
             if (!found) allDrawingsLatestRevision.push([...dwg.cells]);
         };
+
         dataOutput[project.name.slice(0, project.name.length - 17)] = {
-            columnsIndexArray,
+            columnsIndexArray: removeUnwantedHeaders(columnsIndexArray),
             allDrawings,
             allDrawingsLatestRevision
         };
@@ -243,20 +262,26 @@ export const createDummyRecords = () => {
 
 
 const getColumnWidth = (rows, accessor, headerText) => {
-    // const maxWidth = 400;
-    // const magicSpacing = 10;
-    // const cellLength = Math.max(
-    //     ...rows.map(row => (`${row[accessor]}` || '').length),
-    //     headerText.length,
-    // );
+    const maxWidth = 400;
+    const magicSpacing = 10;
+    const cellLength = Math.max(
+        ...rows.map(row => (`${row[accessor]}` || '').length),
+        headerText.length,
+    );
     // const cellLength = headerText.length;
 
     // const w = Math.min(maxWidth, cellLength * magicSpacing) * 1.3;
-    return 200;
+    // return 200;
     // return w < 200 ? 200 : w;
     // return w;
-    // return Math.min(maxWidth, cellLength * magicSpacing);
+    return Math.min(maxWidth, cellLength * magicSpacing);
 };
+
+
+
+
+
+
 
 
 export const getColumnsHeader = (columnsIndexArray, data) => {
@@ -265,7 +290,7 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
             Header: '',
             id: 'index',
             accessor: (row, i) => i + 1,
-            width: 50
+            width: 50,
         },
     ];
 
@@ -288,29 +313,26 @@ export const getColumnsHeader = (columnsIndexArray, data) => {
     };
 
     for (const key in columnsIndexArray) {
-        if (
-            key !== 'Delta_Date' &&
-            key !== 'Delta_IT_CT' &&
-            key !== 'Delta_Issue' &&
-            key !== 'Delta_KTP'
-        ) {
-            if (filterSelect(key)) {
-                columnsName.push({
-                    Header: key,
-                    accessor: formatStringNameToId(key),
-                    Filter: SelectColumnFilter,
-                    width: getColumnWidth(data, formatStringNameToId(key), key),
-                });
-            } else {
-                columnsName.push({
-                    Header: key,
-                    accessor: formatStringNameToId(key),
-                    width: getColumnWidth(data, formatStringNameToId(key), key),
-                });
-            };
+        const width = key === 'Drawing Number' || key === 'Drawing Name' ?
+            getColumnWidth(data, formatStringNameToId(key), key) :
+            300;
 
+        const accessor = formatStringNameToId(key);
+
+        if (filterSelect(key)) {
+            columnsName.push({
+                Header: key,
+                Filter: SelectColumnFilter,
+                accessor,
+                width,
+            });
+        } else {
+            columnsName.push({
+                Header: key,
+                accessor,
+                width,
+            });
         };
-
     };
     return columnsName;
 };

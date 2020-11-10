@@ -37,10 +37,23 @@ const headerProps = (props, { column }) => {
    return getStyles(props, column.align);
 };
 
+const checkCellFix = (cell) => (
+   !cell.isAggregated &&
+   !cell.isGrouped &&
+   cell.isRepeatedValue &&
+   cell.row.subRows.length !== 0 &&
+   // cell.row.depth === 0
+   cell.row.groupByID !== cell.column.id
+);
+
 const cellProps = (props, { cell }) => {
-   props.style.background = cell.isGrouped ? '#0aff0082' :
-      cell.isAggregated ? '#ffa50078' :
-         cell.isPlaceholder ? '#ff000042' : 'white';
+
+   const colorFix = checkCellFix(cell) && '#f6e58d';
+
+   props.style.background = colorFix || (cell.isGrouped ? '#7ed6df' :
+      cell.isAggregated ? '#f6e58d' :
+         cell.isPlaceholder ? '#ff000042' :
+            'white');
    return getStyles(props, cell.column.align);
 };
 
@@ -75,7 +88,7 @@ export const DefaultColumnFilter = ({
    return (
       <div style={{ display: 'flex' }}>
          <div onClick={toggleBtn} style={{ cursor: 'pointer' }}>
-            {btnActive ? <IconTable type='search' color='green' /> : <IconTable type='search' color='blue' />}
+            {btnActive ? <IconTable type='search' color='green' /> : <IconTable type='search' />}
          </div>
          {btnActive && (
             <input
@@ -117,7 +130,7 @@ export const SelectColumnFilter = ({
          <div onClick={toggleBtn} style={{ cursor: 'pointer' }}>
             {btnActive
                ? <IconTable type='search' color='green' />
-               : <IconTable type='search' color='blue' />
+               : <IconTable type='search' />
             }
          </div>
 
@@ -125,7 +138,7 @@ export const SelectColumnFilter = ({
             <select
                value={filterValue}
                onChange={e => setFilter(e.target.value || undefined)}
-               style={{ height: 21, margin: 0 }}
+               style={{ height: 21, width: 40, margin: 0 }}
             >
                <option value=''>All</option>
                {options.map((option, i) => (
@@ -151,13 +164,13 @@ export const GlobalFilter = ({ filter, setFilter }) => {
 
    return (
       <Input.Search
-         placeholder='input search ...'
+         placeholder='Search ...'
          value={value || ''}
          onChange={e => {
             setValue(e.target.value);
             onChange(e.target.value);
          }}
-         style={{ width: 200, height: 25 }}
+         style={{ width: 200 }}
       />
    );
 };
@@ -173,6 +186,7 @@ const TableDrawingList = ({ data, title }) => {
    const tableDataInput = pickDataToTable(drawings, columnsIndexArray);
 
    const columnsName = getColumnsHeader(columnsIndexArray, tableDataInput);
+
 
 
    const columns = useMemo(() => {
@@ -289,10 +303,7 @@ const Table = ({
    const [topPanelFunction, setTopPanelFunction] = useState(0);
    const [leftPanelFunction, setLeftPanelFunction] = useState(0);
 
-   useEffect(() => {
-      document.addEventListener('mousedown', handleMouseDown);
-      return () => document.removeEventListener('mousedown', handleMouseDown);
-   }, []);
+
 
 
    useEffect(() => {
@@ -302,7 +313,6 @@ const Table = ({
          };
       });
    }, []);
-
 
    const [maxRowExpand, setMaxRowExpand] = useState(0);
    useEffect(() => {
@@ -319,6 +329,10 @@ const Table = ({
    const handleMouseDown = (e) => {
       if (e.button === 0) setPanelFunctionVisible(false);
    };
+   useEffect(() => {
+      document.addEventListener('mousedown', handleMouseDown);
+      return () => document.removeEventListener('mousedown', handleMouseDown);
+   }, []);
 
    const panelFunction = (e, column) => {
       setColumnActive(column);
@@ -349,6 +363,7 @@ const Table = ({
 
    const [columnActive, setColumnActive] = useState(false);
    const buttonPanelFunction = (btn) => {
+      // console.log(columnActive);
       if (btn === 'Hide this column') {
          columnActive.toggleHidden(true);
       } else if (btn === 'Unhide all') {
@@ -359,7 +374,7 @@ const Table = ({
          moveColumnLocation(1, columnActive);
       } else if (btn === 'Move to ...') {
          return;
-      }
+      };
    };
 
 
@@ -372,7 +387,7 @@ const Table = ({
       return (
          <div {...row.getRowProps({ style })} className='tr'>
             {row.cells.map(cell => {
-
+               // console.log(cell);
                return (
                   <div {...cell.getCellProps(cellProps)} className='td'>
                      {cell.isGrouped ? (
@@ -380,11 +395,12 @@ const Table = ({
                            <span {...row.getExpandedToggleProps()}>
                               {row.isExpanded ? <IconTable type='up-circle' color='grey' /> : <IconTable type='down-circle' color='grey' />}
                            </span>{' '}
-                           {cell.render('Cell')} ({row.subRows.length})
+                           {cell.render('Cell')} ({row.subRows.length + ' nos'})
                         </>
                      ) : cell.isAggregated ? cell.render('Aggregated')
                            : cell.isPlaceholder ? null
-                              : (cell.render('Cell'))}
+                              : checkCellFix(cell) ? null
+                                 : cell.render('Cell')}
                   </div>
                );
             })}
@@ -401,7 +417,7 @@ const Table = ({
             <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
 
             {title.type === 'Sorted table' && (
-               <Button onClick={openAllColumnTable} type='primary' style={{ marginLeft: 15 }}>View all drawings</Button>
+               <Button onClick={openAllColumnTable} style={{ marginLeft: 15, background: colorType.grey4 }}>View all drawings</Button>
             )}
 
          </div>
@@ -433,7 +449,7 @@ const Table = ({
                                     <span {...column.getGroupByToggleProps()}>
                                        {headerWithNoGroupFunction(column.Header) ? null
                                           : column.isGrouped ? <IconTable type='stop' color='red' />
-                                             : <IconTable type='plus-circle' color='blue' />
+                                             : <IconTable type='plus-circle' />
                                        }
                                     </span>
                                  )}
@@ -451,14 +467,7 @@ const Table = ({
                                        ? (column.isSortedDesc
                                           ? <IconTable type='sort-ascending' color='green' />
                                           : <IconTable type='sort-descending' color='green' />)
-                                       : <IconTable type='ordered-list' color='blue' />}
-                                 </span>
-
-
-                                 <span>
-                                    {column.canFilter && column.Header !== ''
-                                       ? column.render('Filter') : null
-                                    }
+                                       : <IconTable type='ordered-list' />}
                                  </span>
 
                                  <span>
@@ -466,8 +475,14 @@ const Table = ({
                                        <div
                                           style={{ cursor: 'pointer' }}
                                           onClick={(e) => panelFunction(e, column)}
-                                       ><IconTable type='down-circle' color='blue' /></div>
+                                       ><IconTable type='down-circle' /></div>
                                     )}
+                                 </span>
+
+                                 <span>
+                                    {column.canFilter && column.Header !== ''
+                                       ? column.render('Filter') : null
+                                    }
                                  </span>
 
 
@@ -484,7 +499,9 @@ const Table = ({
                      height={500}
                      itemCount={rows.length}
                      itemSize={25}
-                     width={totalColumnsWidth + scrollBarSize}
+                     width={totalColumnsWidth}
+                     // width={3500}
+                     style={{ overflowX: 'hidden' }}
                   >
                      {RenderRow}
                   </FixedSizeList>
@@ -504,6 +521,7 @@ const Table = ({
    );
 };
 
+const borderLine = `1px solid ${colorType.grey2}`
 
 const Container = styled.div`
 
@@ -512,7 +530,7 @@ const Container = styled.div`
     display: block;
     overflow: scroll;
     overflow-y: hidden;
-    border: 1px solid ${colorType.grey2};
+    border: ${borderLine};
 
 
     .table {
@@ -528,7 +546,7 @@ const Container = styled.div`
         }
 
         .tbody {
-            padding-top: 33px;
+            padding-top: 36px;
             overflow-y: auto;
             overflow-x: hidden;
             height: ${0.7 * window.innerHeight}px;
@@ -541,11 +559,12 @@ const Container = styled.div`
         .tr {
             :last-child {
                 .td {
-                    border-bottom: 0;
+                    /* border-bottom: 0; */
                 }
             }
         }
 
+    
         /* .tr:nth-child(even) {
             background-color: ${colorType.grey4};
         } */
@@ -555,8 +574,8 @@ const Container = styled.div`
             margin: 0;
             padding: 0.1rem;
             padding-left: 0.3rem;
-            border-right: 1px solid ${colorType.grey2};
-            border-bottom: 1px solid ${colorType.grey2};
+            border-right: ${borderLine};
+            border-bottom: ${borderLine};
             /* In this example we use an absolutely position resizer, so this is required. */
             position: relative;
 
@@ -587,6 +606,8 @@ const Container = styled.div`
         .th {
             padding: 0.4rem;
         }
+
+        
     }
 `;
 
@@ -594,11 +615,21 @@ const Container = styled.div`
 
 const IconTable = ({ type, color }) => {
    return (
-      <Icon style={{ fontSize: 16, marginRight: 5, color: color }} type={type} />
+      <IconStyle color={color || colorType.black} type={type} />
    );
 };
 
-
+const IconStyle = styled(Icon)`
+   font-size: 16px;
+   margin-right: 5px;
+   color: ${props => props.color};
+   padding: 2px;
+   border-radius: 3px;
+   border: 0.5px solid ${colorType.grey4};
+   :hover {
+      background: ${colorType.grey4}
+   }
+`;
 
 
 

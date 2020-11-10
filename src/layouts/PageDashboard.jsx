@@ -1,7 +1,6 @@
 import { Col, Divider, Modal, Row, Skeleton } from 'antd';
 import Axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { colorType } from '../assets/constant';
 import ChartBarDrawing from '../components/ChartBarDrawing';
 import ChartBarDrawingLate from '../components/ChartBarDrawingLate';
 import ChartBarStack from '../components/ChartBarStack';
@@ -10,7 +9,6 @@ import ChartProgress from '../components/ChartProgress';
 import FormPivot from '../components/FormPivot';
 import NavBar from '../components/NavBar';
 import TableDrawingList from '../components/TableDrawingList';
-import CardPanel from '../components/ui/CardPanel';
 import CardPanelProject from '../components/ui/CardPanelProject';
 import { getDataConverted } from '../utils/function';
 
@@ -30,6 +28,7 @@ const PageDashboard = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     // const [dataRecord, setDataRecord] = useState(null);
+    const [dummy, setDummy] = useState({});
 
 
     useEffect(() => {
@@ -47,15 +46,17 @@ const PageDashboard = () => {
                     }
                 );
                 setData(getDataConverted(result.data));
+                setDummy(dummyData);
                 setLoading(false);
 
                 // setTimeout(() => {
                 //     const result = JSON.parse(localStorage.getItem('wh'));
                 //     console.log('-----------------------------------------', 'DATA FETCHED');
                 //     setData(getDataConverted(result));
+                //     setDummy(dummyData);
                 //     setLoading(false);
-                // }, 100);
-                // localStorage.setItem('wh', JSON.stringify(result.data));
+                // }, 1000);
+                localStorage.setItem('wh', JSON.stringify(result.data));
             } catch (err) {
                 console.log(err);
                 setLoading(false);
@@ -87,10 +88,10 @@ const PageDashboard = () => {
 
             <div style={{ marginTop: 60, marginBottom: 60 }}>
                 <Row justify='space-around' style={{ margin: '25px 0 5px 0' }}>
-                    <ChartBarDrawingLate title='No Of Drawing Late Construction' />
+                    <ChartBarDrawingLate data={dummy.dummyLateConstruction} title='No Of Drawing Late Construction' />
                     <ChartBarDrawingLate data={data} title='No Of Drawing Late Approval' />
                     <ChartBarStack data={data} title='Drawing Status' />
-                    <ChartBarStack data={productivityData} title='Productivity - (days per drawing)' />
+                    <ChartBarStack data={dummy.productivityDummy} title='Productivity - (days per drawing)' />
                 </Row>
 
                 {!loading && data ? (
@@ -165,11 +166,11 @@ const PageDashboard = () => {
                         }}
                     >
                         <div style={{ display: 'flex' }}>
-                            <h3 style={{ background: colorType.green, padding: '0 10px' }}>{drawingTableData.title.type}</h3>
+                            <h3 style={{ padding: '0 0 10px 0' }}>{drawingTableData.title.type}</h3>
                             <Divider type='vertical' style={{ height: 25 }} />
-                            <h3 style={{ background: colorType.yellow, padding: '0 10px' }}>{drawingTableData.title.category}</h3>
+                            <h3 style={{ padding: '0 10px' }}>{drawingTableData.title.category}</h3>
                             <Divider type='vertical' style={{ height: 25 }} />
-                            <h3 style={{ background: colorType.grey1, padding: '0 10px' }}>{drawingTableData.drawings.length + ' drawings'}</h3>
+                            <h3 style={{ padding: '0 10px' }}>{drawingTableData.drawings.length + ' drawings'}</h3>
                         </div>
 
                         <TableDrawingList
@@ -191,7 +192,6 @@ export default PageDashboard;
 
 
 
-
 const ChartPanel = ({ title, children }) => {
     return (
         <Col style={{ marginBottom: 10 }} xs={24} md={12} xl={6}>
@@ -205,46 +205,37 @@ const ChartPanel = ({ title, children }) => {
 const SkeletonCard = () => {
     return (
         <div style={{ padding: '0 12px' }}>
-            <CardPanel
-                title='Project loading ...'
-                headColor={colorType.grey2}
-                headTitleColor={'white'}
-            >
-                <div style={{ padding: '20px', marginBottom: '95px' }}><Skeleton /><Skeleton /></div>
-            </CardPanel>
-            <CardPanel
-                title='Project loading ...'
-                headColor={colorType.grey2}
-                headTitleColor={'white'}
-            >
-                <div style={{ padding: '20px', marginBottom: '95px' }}><Skeleton /><Skeleton /></div>
-            </CardPanel>
+            <CardPanelProject title='Project loading ...'>
+                <div style={{ padding: '0 3px' }}>
+                    <Skeleton paragraph={{ rows: 14 }} active />
+                </div>
+            </CardPanelProject>
         </div>
     );
 };
 
 
 
-const productivityData = {
-    inputData: [
-        {
-            'Modelling': 3,
-            'Shopdrawing': 5,
-            'Submit To Consultant': 2,
-            'Consultant Reply': 5,
-            'Get Approval': 4,
-            'name': 'Sumang'
-        },
-        {
-            'Modelling': 4,
-            'Shopdrawing': 6,
-            'Submit To Consultant': 3,
-            'Consultant Reply': 4,
-            'Get Approval': 2,
-            'name': 'Handy'
-        }
-    ],
-    inputStack: ['Modelling', 'Shopdrawing', 'Submit To Consultant', 'Consultant Reply', 'Get Approval']
+const dummyData = {
+    productivityDummy: {
+        inputData: [
+            {
+                'Consultant review and reply': 4,
+                'Create update drawing': 3,
+                'Create update model': 7,
+                'name': 'Sumang'
+            },
+            {
+                'Consultant review and reply': 5,
+                'Create update drawing': 4,
+                'Create update model': 6,
+                'name': 'Handy'
+            }
+        ],
+        inputStack: ['Consultant review and reply', 'Create update drawing', 'Create update model']
+    },
+    dummyLateConstruction: [
+        { name: 'Handy', value: 6 },
+        { name: 'Sumang', value: 15 },
+    ]
 };
-
-

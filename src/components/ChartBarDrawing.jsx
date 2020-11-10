@@ -131,7 +131,11 @@ const ChartBarDrawing = ({ data, openDrawingTable, projectName }) => {
             <BarChart
                 width={350}
                 height={350}
-                data={drawingCountSubStatus}
+                data={drawingCountSubStatus.sort((a, b) => {
+                    if (a.name < b.name) return -1;
+                    if (a.name > b.name) return 1;
+                    return 0;
+                })}
                 margin={{ top: 35, right: 15, left: 0, bottom: 20 }}
                 padding={{ top: 5 }}
                 barSize={23}
@@ -140,24 +144,27 @@ const ChartBarDrawing = ({ data, openDrawingTable, projectName }) => {
                 <XAxis tickSize={3} dataKey='name' textAnchor='middle' interval={0} scale='point' padding={{ left: 35, right: 35 }} />
                 <YAxis />
                 <Tooltip content={<TooltipCustom />} />
-                {sortStatusOrder(inputStack).map((item, i) => (
-                    <Bar
-                        key={item}
-                        dataKey={item}
-                        stackId='a'
-                        fill={pieChartColors2[item]}
-                        isAnimationActive={false}
-                        onClick={(e) => onClick(e, item)}
-                        onMouseOver={() => setTooltip(item)}
-                        label={<LabelCustomStackedTotal topBar={i === inputStack.length - 1} />}
-                    >
-                        <LabelList dataKey={item} position='left' content={<LabelCustomStacked item={item} />} />
-                    </Bar>
-                ))}
+                {sortStatusOrder(inputStack).map((item, i) => {
+                    return (
+                        <Bar
+                            key={item}
+                            dataKey={item}
+                            stackId='a'
+                            fill={pieChartColors2[item]}
+                            isAnimationActive={false}
+                            onClick={(e) => onClick(e, item)}
+                            onMouseOver={() => setTooltip(item)}
+                            label={<LabelCustomStackedTotal topBar={i === inputStack.length - 1} />}
+                        >
+                            <LabelList dataKey={item} position='left' content={<LabelCustomStacked item={item} />} />
+                        </Bar>
+                    )
+                })}
 
             </BarChart>
 
             <div style={{ paddingLeft: 50, height: 180 }}>
+
                 {sortStatusOrder(inputStack).reverse().map((key, i) => (
                     <div key={key} style={{ display: 'flex' }}>
                         <StyledBadge
@@ -167,6 +174,7 @@ const ChartBarDrawing = ({ data, openDrawingTable, projectName }) => {
                         />
                     </div>
                 ))}
+                
             </div>
         </div>
 
